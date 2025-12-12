@@ -704,7 +704,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 log.debug("entityId", entityId);
                 var intid = entityId[0].getValue("internalid");
                 log.debug("entityId", intid)
-                let invoiceSearchResult = [];
+
+              let invoiceSearchResult = [];
 
                 // if(refno)
                 //Added By Atharva 11 Dec 2025
@@ -727,17 +728,12 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     createError('Reference number not found', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                     return; // Exit function
                 }
-            
-                // If we reach here, invoice doesn't exist - proceed with creation
+
+
                 var newRecord = record.create({
                     type: 'invoice',
                     isDynamic: true
                 });
-                    // if(invoiceSearchResult.length > 0){
-
-                    // }else{
-
-                    // }
 
 
                 newRecord.setValue({
@@ -1995,7 +1991,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 var intid = entityId[0].getValue("internalid");
                 log.debug("entityId", intid)
 
-                if (!enr_refno) {
+              if (!enr_refno) {
                     log.audit('Reference number not found', enr_refno);
                     createError('Reference number not found', enr_refno, student_number, jsonData, filename, custRecordId, recordtype);
                     return; // Exit function

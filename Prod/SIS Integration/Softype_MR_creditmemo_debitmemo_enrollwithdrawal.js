@@ -621,7 +621,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 }
                 else {
 
-                    //Added By Atharva - 11 December 2025
+                  //Added By Atharva - 11 December 2025
                     // let invoiceSearchResult = [];
 
                      if (!refno) {
@@ -643,11 +643,12 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         createError('Invoice already exists', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                         return; // Exit function without creating new invoice
                     }
-
+                  
                     var newRecord = record.create({
                         type: 'invoice',
                         isDynamic: true
-                    })
+                    });
+
 
                     newRecord.setValue({
                         fieldId: 'customform',
