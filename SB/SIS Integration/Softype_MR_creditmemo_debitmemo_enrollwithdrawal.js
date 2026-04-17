@@ -1914,4 +1914,3 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
     };
 
 });
-
