@@ -606,6 +606,29 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 log.debug("entityId", intid)
 
                 if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
+
+                    //Added By Atharva - 17 April 2026
+                    // Check if refno exists before proceeding
+                    if (!refno) {
+                        log.audit('Reference number not found', refno);
+                        createError('Reference number not found', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
+                        return; // Stop processing - no refno to work with
+                    }
+
+                    // Check if credit memo already exists at creation time to prevent duplicates
+                    let creditMemoSearchResult = search.create({
+                        type: search.Type.CREDIT_MEMO,
+                        filters: [
+                            ['tranid', 'is', refno]
+                        ],
+                    }).run().getRange(0, 1);
+
+                    if (creditMemoSearchResult.length > 0) {
+                        // Credit memo already exists - create error and stop
+                        createError('Credit Memo already exists', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
+                        return; // Exit function without creating new credit memo
+                    }
+
                     var newRecord = record.create({
                         type: 'creditmemo',
                         isDynamic: true
