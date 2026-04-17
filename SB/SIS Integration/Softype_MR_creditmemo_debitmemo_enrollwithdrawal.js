@@ -607,15 +607,15 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
                 if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
 
-                    //Added By Atharva - 17 April 2026
-                    // Check if refno exists before proceeding
+                    //Added By Grace L - 17 April 2026
+                    // Duplicate prevention for credit memos
                     if (!refno) {
                         log.audit('Reference number not found', refno);
                         createError('Reference number not found', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                         return; // Stop processing - no refno to work with
                     }
 
-                    // Check if credit memo already exists at creation time to prevent duplicates
+                    // Check if credit memo already exists
                     let creditMemoSearchResult = search.create({
                         type: search.Type.CREDIT_MEMO,
                         filters: [
@@ -625,7 +625,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
                     if (creditMemoSearchResult.length > 0) {
                         // Credit memo already exists - create error and stop
-                        createError('Credit Memo already exists', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
+                        createError('Credit memo already exists', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                         return; // Exit function without creating new credit memo
                     }
 
@@ -641,6 +641,14 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         value: '124'
                     });
 
+                    // Set reference to custom record
+                    if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+                        newRecord.setValue({
+                            fieldId: 'custbody_st_json_file',
+                            value: custRecordId
+                        });
+                    }
+
                 }
                 else {
 
@@ -652,7 +660,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         createError('Reference number not found', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                         return; // Stop processing - no refno to work with
                     }
-                    
+
                     // Check if invoice already exists
                     let invoiceSearchResult = search.create({
                         type: search.Type.INVOICE,
@@ -660,7 +668,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             ['tranid', 'is', refno]
                         ],
                     }).run().getRange(0, 1);
-                    
+
                     if (invoiceSearchResult.length > 0) {
                         // Invoice already exists - create error and stop
                         createError('Invoice already exists', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
@@ -676,6 +684,14 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         fieldId: 'customform',
                         value: '123'
                     });
+
+                    // Set reference to custom record
+                    if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+                        newRecord.setValue({
+                            fieldId: 'custbody7',
+                            value: custRecordId
+                        });
+                    }
 
 
                 }
