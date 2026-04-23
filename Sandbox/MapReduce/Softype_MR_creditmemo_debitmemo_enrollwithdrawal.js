@@ -143,7 +143,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             "creditmemoData": memoData.debit_memo,
                             "recordtype": recordtype,
                             'filename': jsonfilename,
-                            'customrecordtype': customrecordtype
+                            'customrecordtype': customrecordtype,
+                            'fileID': fileID
                         }
                     });
                 }
@@ -159,7 +160,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         "creditmemoData": memoData.debit_memo,
                         "recordtype": recordtype,
                         'filename': jsonfilename,
-                        'customrecordtype': customrecordtype
+                        'customrecordtype': customrecordtype,
+                        'fileID': fileID
                     }
                 });
             }
@@ -178,7 +180,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             "creditmemoData": memoData.credit_memo,
                             "recordtype": recordtype,
                             'filename': jsonfilename,
-                            'customrecordtype': customrecordtype
+                            'customrecordtype': customrecordtype,
+                            'fileID': fileID
                         }
                     });
                 }
@@ -194,7 +197,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         "creditmemoData": memoData.credit_memo,
                         "recordtype": recordtype,
                         'filename': jsonfilename,
-                        'customrecordtype': customrecordtype
+                        'customrecordtype': customrecordtype,
+                        'fileID': fileID
                     }
                 });
             }
@@ -213,7 +217,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             "creditmemoData": memoData.student_info,
                             "recordtype": recordtype,
                             'filename': jsonfilename,
-                            'customrecordtype': customrecordtype
+                            'customrecordtype': customrecordtype,
+                            'fileID': fileID
                         }
                     });
                 }
@@ -229,7 +234,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         "creditmemoData": memoData.student_info,
                         "recordtype": recordtype,
                         'filename': jsonfilename,
-                        'customrecordtype': customrecordtype
+                        'customrecordtype': customrecordtype,
+                        'fileID': fileID
                     }
                 });
             }
@@ -253,6 +259,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 var customrecordtype = jsondata.customrecordtype;
                 var recordtype = jsondata.recordtype;
                 var filename = jsondata.filename;
+                var fileID = jsondata.fileID;
                 log.audit('Data in Map', data);
 
                 if (recordtype == "enrollwithdrawal") {
@@ -281,7 +288,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 }
 
                 if (existinggetRefNoSearchResult.length == 0) {
-                    var createCreditMemoRec = createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype);
+                    var createCreditMemoRec = createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
                     log.debug('Record Created', createCreditMemoRec);
                 }
             }
@@ -459,7 +466,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
         return creditResults;
     }
 
-    function createCreditMemoRecord(jsonData, recordtype, filename, custRecordId, customrecordtype) {
+    function createCreditMemoRecord(jsonData, recordtype, filename, custRecordId, customrecordtype, fileID) {
 
         try {
             var auto_pay = true;
@@ -641,11 +648,11 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         value: '124'
                     });
 
-                    // Set reference to custom record
-                    if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+                    // Set reference to JSON file
+                    if (fileID != '' && fileID != null && fileID != undefined) {
                         newRecord.setValue({
                             fieldId: 'custbody_st_json_file',
-                            value: custRecordId
+                            value: fileID
                         });
                     }
 
@@ -690,6 +697,14 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         newRecord.setValue({
                             fieldId: 'custbody7',
                             value: custRecordId
+                        });
+                    }
+
+                    // Set reference to JSON file
+                    if (fileID != '' && fileID != null && fileID != undefined) {
+                        newRecord.setValue({
+                            fieldId: 'custbody_st_json_file',
+                            value: fileID
                         });
                     }
 
