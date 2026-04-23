@@ -716,7 +716,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             ['tranid', 'is', refno]
                         ],
                     }).run().getRange(0, 1);
-                    
+
                     if (invoiceSearchResult.length > 0) {
                         // Invoice exists - create error and stop
                         createError('Invoice already exists', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
@@ -727,23 +727,31 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     createError('Reference number not found', refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                     return; // Exit function
                 }
-            
+
                 // If we reach here, invoice doesn't exist - proceed with creation
                 var newRecord = record.create({
                     type: 'invoice',
                     isDynamic: true
                 });
-                    // if(invoiceSearchResult.length > 0){
+                // if(invoiceSearchResult.length > 0){
 
-                    // }else{
+                // }else{
 
-                    // }
+                // }
 
 
                 newRecord.setValue({
                     fieldId: 'customform',
                     value: '123'
                 });
+
+                // Set reference to custom record
+                if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+                    newRecord.setValue({
+                        fieldId: 'custbody_st_json_file',
+                        value: custRecordId
+                    });
+                }
 
 
 
@@ -2658,8 +2666,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         log.audit('Details', "New TutionBill scholar Created Successfully==>", recordid);
                         return recordid;
                     }
-                    else
-                    {
+                    else {
                         createError("Terms Description Not found", enr_refno, student_number, jsonData, filename, custRecordId, recordtype);
                     }
                 }
