@@ -149,6 +149,7 @@ define([
 						Math.floor(Math.random() * 1000000000000000 + 1),
 					value: {
 						custRecordId: custRecordId,
+						fileID: fileID,
 						paymentData: paymentData.payment_info,
 						paymentReservation: paymentReservation,
 						filename: jsonfilename,
@@ -169,6 +170,7 @@ define([
 					"_1",
 				value: {
 					custRecordId: custRecordId,
+					fileID: fileID,
 					paymentData: paymentData.payment_info,
 					paymentReservation: paymentReservation,
 					filename: jsonfilename,
@@ -192,6 +194,7 @@ define([
 				var recordtype = jsondata.recordtype;
 				var data = jsondata.paymentData;
 				var custRecordId = jsondata.custRecordId;
+				var fileID = jsondata.fileID;
 				var customrecordtype = jsondata.customrecordtype;
 				var paymentReservation = jsondata.paymentReservation;
 				var filename = jsondata.filename;
@@ -235,6 +238,7 @@ define([
 						paymentReservation,
 						filename,
 						custRecordId,
+						fileID,
 						customrecordtype
 					);
 					if (createCreditMemoRec)
@@ -595,6 +599,7 @@ define([
 		paymentReservation,
 		fileName,
 		custRecordId,
+		fileID,
 		customrecordtype
 	) {
 		try {
@@ -723,6 +728,14 @@ define([
 					fieldId: "customform",
 					value: "126",
 				});
+
+				// Set reference to JSON file
+				if (fileID != '' && fileID != null && fileID != undefined) {
+					newRecord.setValue({
+						fieldId: "custbody_st_json_file",
+						value: fileID,
+					});
+				}
 			} else if (recordtype == "journal") {
 				var newRecord = record.create({
 					type: "journalentry",
@@ -739,11 +752,11 @@ define([
 					value: "2",
 				});
 
-				// Set reference to custom record
-				if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+				// Set reference to JSON file
+				if (fileID != '' && fileID != null && fileID != undefined) {
 					newRecord.setValue({
-						fieldId: "custbody8",
-						value: custRecordId,
+						fieldId: "custbody_st_json_file",
+						value: fileID,
 					});
 				}
 			} else {
@@ -757,11 +770,11 @@ define([
 					value: "125",
 				});
 
-				// Set reference to custom record
-				if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+				// Set reference to JSON file
+				if (fileID != '' && fileID != null && fileID != undefined) {
 					newRecord.setValue({
-						fieldId: "custbody9",
-						value: custRecordId,
+						fieldId: "custbody_st_json_file",
+						value: fileID,
 					});
 				}
 			}

@@ -214,7 +214,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             "creditmemoData": memoData.debit_memo,
                             "recordtype": 'debitmemo',
                             'filename': jsonfilename,
-                            'customrecordtype': recordtype
+                            'customrecordtype': recordtype,
+                            'fileID': fileID
                         }
                     });
                 }
@@ -230,7 +231,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         "creditmemoData": memoData.debit_memo,
                         "recordtype": 'debitmemo',
                         'filename': jsonfilename,
-                        'customrecordtype': recordtype
+                        'customrecordtype': recordtype,
+                        'fileID': fileID
                     }
                 });
             }
@@ -248,7 +250,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             "tutionbillData": tutionBillData.student_info,
                             "programshifting": programshifting,
                             'filename': jsonfilename,
-                            "recordtype": recordtype
+                            "recordtype": recordtype,
+                            'fileID': fileID
                         }
                     });
                 }
@@ -264,7 +267,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         "tutionbillData": tutionBillData.student_info,
                         "programshifting": programshifting,
                         'filename': jsonfilename,
-                        "recordtype": recordtype
+                        "recordtype": recordtype,
+                        'fileID': fileID
                     }
                 });
             }
@@ -292,6 +296,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     var custRecordId = jsondata.custRecordId;
                     var customrecordtype = jsondata.customrecordtype;
                     var filename = jsondata.filename;
+                    var fileID = jsondata.fileID;
                     log.audit('Data in Map', data);
                     var getRefNo = data.refno;
 
@@ -311,7 +316,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     }
 
                     if (existinggetRefNoSearchResult.length == 0) {
-                        var createDebitMemoRec = createDebitMemoRecord(data, recordtype, filename, custRecordId, customrecordtype);
+                        var createDebitMemoRec = createDebitMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
                         if (createDebitMemoRec)
                             log.debug('Record Created', createDebitMemoRec);
                     }
@@ -325,6 +330,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
                     var getRefNo = data.enr_refno;
                     var filename = jsondata.filename;
+                    var fileID = jsondata.fileID;
                     log.error('Get TutionBill ID', getRefNo);
 
                     var getRefNo_prog_shift
@@ -378,7 +384,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
 
                                 if (existingTutbillSearchResult.length == 0) {
-                                    var createCreditMemoRec = createTutionBillRecord(data, filename, custRecordId, recordtype);
+                                    var createCreditMemoRec = createTutionBillRecord(data, filename, custRecordId, recordtype, fileID);
                                     if (createCreditMemoRec) {
                                         log.debug('TutionBill Created', createCreditMemoRec);
                                     }
@@ -426,7 +432,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
 
                                 if (existingTutbillSearchResult.length == 0) {
-                                    var createCreditMemoRec = createTutionBillRecord(data, filename, custRecordId, recordtype);
+                                    var createCreditMemoRec = createTutionBillRecord(data, filename, custRecordId, recordtype, fileID);
                                     if (createCreditMemoRec) {
                                         log.debug('TutionBill Created', createCreditMemoRec);
                                     }
@@ -549,7 +555,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         }
 
                         if (existinggetRefNoSearchResult.length == 0) {
-                            var createCreditMemoRec = createTutionBillRecord(data, filename, custRecordId, recordtype);
+                            var createCreditMemoRec = createTutionBillRecord(data, filename, custRecordId, recordtype, fileID);
                             if (createCreditMemoRec)
                                 log.debug('TutionBill Created', createCreditMemoRec);
                         }
@@ -563,7 +569,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
     }
 
 
-    function createDebitMemoRecord(jsonData, recordtype, filename, custRecordId, customrecordtype) {
+    function createDebitMemoRecord(jsonData, recordtype, filename, custRecordId, customrecordtype, fileID) {
 
         try {
             var auto_pay = true;
@@ -745,11 +751,11 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     value: '123'
                 });
 
-                // Set reference to custom record
-                if (custRecordId != '' && custRecordId != null && custRecordId != undefined) {
+                // Set reference to JSON file
+                if (fileID != '' && fileID != null && fileID != undefined) {
                     newRecord.setValue({
                         fieldId: 'custbody_st_json_file',
-                        value: custRecordId
+                        value: fileID
                     });
                 }
 
@@ -1893,7 +1899,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
         return Results;
     }
 
-    function createTutionBillRecord(jsonData, filename, custRecordId, recordtype) {
+    function createTutionBillRecord(jsonData, filename, custRecordId, recordtype, fileID) {
 
         try {
             var myEnvType = runtime.envType;
@@ -2032,6 +2038,14 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     fieldId: 'customform',
                     value: customform
                 });
+
+                // Set reference to JSON file
+                if (fileID != '' && fileID != null && fileID != undefined) {
+                    newRecord.setValue({
+                        fieldId: 'custbody_st_json_file',
+                        value: fileID
+                    });
+                }
 
                 if (entityId != '' && entityId != null && entityId != undefined) {
                     newRecord.setValue({
