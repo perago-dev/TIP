@@ -81,16 +81,29 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
         var customrecordtype = jsondata.customrecordtype;
         log.debug("recordtype", recordtype);
         log.debug("custRecordId", custRecordId);
+
+        log.audit("MAP PHASE - Starting lookup for file", "custRecordId: " + custRecordId + ", recordtype: " + recordtype);
+
         var lookup = search.lookupFields({
             type: customrecordtype,
             id: custRecordId,
             columns: ['file.name', 'file.internalid']
         });
-        log.debug("lookup", lookup);
+        log.audit("MAP PHASE - Lookup result", JSON.stringify(lookup));
 
         var filename = lookup['file.name'];
         var jsonfilename = filename;
-        var fileID = lookup['file.internalid'][0].text;
+
+        log.debug("MAP PHASE - filename from lookup", filename);
+        log.debug("MAP PHASE - file.internalid from lookup", JSON.stringify(lookup['file.internalid']));
+
+        var fileID = null;
+        if (lookup['file.internalid'] && lookup['file.internalid'].length > 0) {
+            fileID = lookup['file.internalid'][0].value;
+            log.audit("MAP PHASE - fileID extracted", fileID);
+        } else {
+            log.error("MAP PHASE - File field is empty or not populated", "custRecordId: " + custRecordId);
+        }
         var fileObj = file.load({
             id: fileID
         });
@@ -173,6 +186,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 for (var k = 0; k < resultData.length; k++) {
                     var memoData = resultData[k];
                     log.debug("tutionBillData", memoData.credit_memo);
+                    log.audit("MAP PHASE - Writing to reduce (credit memo array)", "fileID being passed: " + fileID + ", filename: " + jsonfilename + ", index: " + k);
                     context.write({
                         key: jsonfilename + "_" + k + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                         value: {
@@ -189,6 +203,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             else {
                 var memoData = resultData;
                 log.debug("tutionBillData", memoData.credit_memo);
+                log.audit("MAP PHASE - Writing to reduce (single)", "fileID being passed: " + fileID + ", filename: " + jsonfilename);
 
                 context.write({
                     key: jsonfilename + "_1" + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
@@ -260,7 +275,9 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 var recordtype = jsondata.recordtype;
                 var filename = jsondata.filename;
                 var fileID = jsondata.fileID;
-                log.audit('Data in Map', data);
+                log.audit('REDUCE PHASE - Data received', data);
+                log.audit('REDUCE PHASE - fileID received', "fileID: " + fileID + ", Type: " + typeof fileID + ", custRecordId: " + custRecordId);
+                log.audit('REDUCE PHASE - Full jsondata', JSON.stringify(jsondata));
 
                 if (recordtype == "enrollwithdrawal") {
                     var getRefNo = data.enr_refno;
@@ -288,6 +305,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 }
 
                 if (existinggetRefNoSearchResult.length == 0) {
+                    log.audit('REDUCE PHASE - Calling createCreditMemoRecord', "fileID being passed: " + fileID + ", refno: " + getRefNo);
                     var createCreditMemoRec = createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
                     log.debug('Record Created', createCreditMemoRec);
                 }
@@ -469,6 +487,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
     function createCreditMemoRecord(jsonData, recordtype, filename, custRecordId, customrecordtype, fileID) {
 
         try {
+            log.audit('CREATE FUNCTION - Parameters received', "recordtype: " + recordtype + ", fileID: " + fileID + ", custRecordId: " + custRecordId + ", filename: " + filename);
+
             var auto_pay = true;
             if (recordtype == "enrollwithdrawal") {
                 var refno = jsonData.enr_refno;
@@ -649,11 +669,21 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     });
 
                     // Set reference to JSON file
+                    log.audit('CREDIT MEMO - Before setting custbody_st_json_file', "fileID value: " + fileID + ", Type: " + typeof fileID + ", isEmpty: " + (fileID == '') + ", isNull: " + (fileID == null) + ", isUndefined: " + (fileID == undefined) + ", refno: " + refno);
+
                     if (fileID != '' && fileID != null && fileID != undefined) {
-                        newRecord.setValue({
-                            fieldId: 'custbody_st_json_file',
-                            value: fileID
-                        });
+                        try {
+                            log.audit('CREDIT MEMO - Setting custbody_st_json_file', "fileID: " + fileID + ", refno: " + refno);
+                            newRecord.setValue({
+                                fieldId: 'custbody_st_json_file',
+                                value: fileID
+                            });
+                            log.audit('CREDIT MEMO - custbody_st_json_file SET SUCCESSFULLY', "fileID: " + fileID);
+                        } catch (e) {
+                            log.error('CREDIT MEMO - Error setting custbody_st_json_file', "Error: " + e + ", fileID: " + fileID + ", refno: " + refno);
+                        }
+                    } else {
+                        log.error('CREDIT MEMO - custbody_st_json_file NOT SET', "fileID is empty/null/undefined. fileID: " + fileID + ", refno: " + refno + ", custRecordId: " + custRecordId);
                     }
 
                 }
@@ -1528,6 +1558,16 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     });
                     if (recordid) {
                         log.audit('Details', "New Record Created Successfully==>" + recordid);
+
+                        // Verify if custbody_st_json_file was set for credit memo
+                        if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
+                            var verifyLookup = search.lookupFields({
+                                type: recordtype == "creditmemo" ? record.Type.CREDIT_MEMO : record.Type.CREDIT_MEMO,
+                                id: recordid,
+                                columns: ['custbody_st_json_file']
+                            });
+                            log.audit('VERIFICATION - custbody_st_json_file after save', "recordid: " + recordid + ", custbody_st_json_file: " + JSON.stringify(verifyLookup['custbody_st_json_file']) + ", Expected fileID: " + fileID);
+                        }
                         if (recordtype == "debitmemo") {
 
                             try {
