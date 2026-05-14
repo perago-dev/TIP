@@ -267,47 +267,49 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             var jsonlength = context.values;
             log.debug("jsonLength", jsonlength);
             for (var g = 0; g < jsonlength.length; g++) {
-                var jsondata = JSON.parse(context.values[g]);
+                try {
+                    var jsondata = JSON.parse(context.values[g]);
 
-                var data = jsondata.creditmemoData;
-                var custRecordId = jsondata.custRecordId;
-                var customrecordtype = jsondata.customrecordtype;
-                var recordtype = jsondata.recordtype;
-                var filename = jsondata.filename;
-                var fileID = jsondata.fileID;
-                log.audit('REDUCE PHASE - Data received', data);
-                log.audit('REDUCE PHASE - fileID received', "fileID: " + fileID + ", Type: " + typeof fileID + ", custRecordId: " + custRecordId);
-                log.audit('REDUCE PHASE - Full jsondata', JSON.stringify(jsondata));
+                    var data = jsondata.creditmemoData;
+                    var custRecordId = jsondata.custRecordId;
+                    var customrecordtype = jsondata.customrecordtype;
+                    var recordtype = jsondata.recordtype;
+                    var filename = jsondata.filename;
+                    var fileID = jsondata.fileID;
+                    log.audit('REDUCE PHASE - Data received', data);
+                    log.audit('REDUCE PHASE - fileID received', "fileID: " + fileID + ", Type: " + typeof fileID + ", custRecordId: " + custRecordId);
 
-                if (recordtype == "enrollwithdrawal") {
-                    var getRefNo = data.enr_refno;
-                }
-                else {
-                    var getRefNo = data.refno;
-                }
-                log.debug('Get ID', getRefNo);
+                    if (recordtype == "enrollwithdrawal") {
+                        var getRefNo = data.enr_refno;
+                    }
+                    else {
+                        var getRefNo = data.refno;
+                    }
+                    log.debug('Get ID', getRefNo);
 
-                log.debug("recordtype", recordtype);
-                var existinggetRefNoSearchResult;
-                if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
-                    existinggetRefNoSearchResult = searchExistingCreditMemo(getRefNo);
-                }
-                else {
-                    existinggetRefNoSearchResult = searchExistingDebitMemo(getRefNo);
-                }
-                log.debug('Existing Transaction found==>', JSON.stringify(existinggetRefNoSearchResult));
+                    log.debug("recordtype", recordtype);
+                    var existinggetRefNoSearchResult;
+                    if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
+                        existinggetRefNoSearchResult = searchExistingCreditMemo(getRefNo);
+                    }
+                    else {
+                        existinggetRefNoSearchResult = searchExistingDebitMemo(getRefNo);
+                    }
+                    log.debug('Existing Transaction found==>', JSON.stringify(existinggetRefNoSearchResult));
 
-                if (existinggetRefNoSearchResult.length > 0) {
-                    var existingCreditMemoID = existinggetRefNoSearchResult[0].getValue('internalid');
-                    createError("Record Already existing", getRefNo, "", "", filename, custRecordId, customrecordtype);
-                    log.error('Existing Transaction ID', existingCreditMemoID);
-                    // }
-                }
+                    if (existinggetRefNoSearchResult.length > 0) {
+                        var existingCreditMemoID = existinggetRefNoSearchResult[0].getValue('internalid');
+                        createError("Record Already existing", getRefNo, "", "", filename, custRecordId, customrecordtype);
+                        log.error('Existing Transaction ID', existingCreditMemoID);
+                    }
 
-                if (existinggetRefNoSearchResult.length == 0) {
-                    log.audit('REDUCE PHASE - Calling createCreditMemoRecord', "fileID being passed: " + fileID + ", refno: " + getRefNo);
-                    var createCreditMemoRec = createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
-                    log.debug('Record Created', createCreditMemoRec);
+                    if (existinggetRefNoSearchResult.length == 0) {
+                        log.audit('REDUCE PHASE - Calling createCreditMemoRecord', "fileID being passed: " + fileID + ", refno: " + getRefNo);
+                        var createCreditMemoRec = createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
+                        log.debug('Record Created', createCreditMemoRec);
+                    }
+                } catch (e) {
+                    log.error("error reduce - item " + g, e);
                 }
             }
         } catch (e) {
@@ -1549,6 +1551,15 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 //         }
                 //     }
                 // }
+
+                // Set JSON file reference last, after autoapply, to prevent re-sourcing from overwriting it
+                if ((recordtype == "creditmemo" || recordtype == "enrollwithdrawal") && fileID != '' && fileID != null && fileID != undefined) {
+                    newRecord.setValue({
+                        fieldId: 'custbody_st_json_file',
+                        value: fileID
+                    });
+                    log.audit('PRE-SAVE - custbody_st_json_file set', "fileID: " + fileID);
+                }
 
                 log.audit("Done item", newRecord);
                 if (item_present) {
