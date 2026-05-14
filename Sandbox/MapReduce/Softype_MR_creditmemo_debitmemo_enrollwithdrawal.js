@@ -29,7 +29,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
             var jsonfilename = "";
 
-            log.debug("getJSONDataCreditmemo", getJSONData)
             if (getJSONData.length > 0) {
                 for (var i = 0; i < getJSONData.length; i++) {
                     var custRecordId = getJSONData[i];
@@ -46,7 +45,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             var getJSONDataEnrolWithdraw = searchUnprocessedEnrollWithdrawalRequests();
 
 
-            log.debug("getJSONDataEnrolWithdraw", getJSONDataEnrolWithdraw)
             if (getJSONDataEnrolWithdraw.length > 0) {
                 for (var i = 0; i < getJSONDataEnrolWithdraw.length; i++) {
                     var custRecordId = getJSONDataEnrolWithdraw[i];
@@ -73,34 +71,22 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
     function map(context) {
 
-        log.debug("contextmap", context);
         var jsondata = JSON.parse(context.value);
-        log.debug("jsondata", jsondata);
         var custRecordId = jsondata.custRecordId;
         var recordtype = jsondata.recordtype;
         var customrecordtype = jsondata.customrecordtype;
-        log.debug("recordtype", recordtype);
-        log.debug("custRecordId", custRecordId);
-
-        log.audit("MAP PHASE - Starting lookup for file", "custRecordId: " + custRecordId + ", recordtype: " + recordtype);
 
         var lookup = search.lookupFields({
             type: customrecordtype,
             id: custRecordId,
             columns: ['file.name', 'file.internalid']
         });
-        log.audit("MAP PHASE - Lookup result", JSON.stringify(lookup));
-
         var filename = lookup['file.name'];
         var jsonfilename = filename;
-
-        log.debug("MAP PHASE - filename from lookup", filename);
-        log.debug("MAP PHASE - file.internalid from lookup", JSON.stringify(lookup['file.internalid']));
 
         var fileID = null;
         if (lookup['file.internalid'] && lookup['file.internalid'].length > 0) {
             fileID = lookup['file.internalid'][0].value;
-            log.audit("MAP PHASE - fileID extracted", fileID);
         } else {
             log.error("MAP PHASE - File field is empty or not populated", "custRecordId: " + custRecordId);
         }
@@ -141,14 +127,12 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
         }
 
-        log.debug("resultData", resultData);
 
         if (recordtype == "debitmemo") {
             if (Array.isArray(resultData)) {
                 // log.debug("resultData", resultData);
                 for (var k = 0; k < resultData.length; k++) {
                     var memoData = resultData[k];
-                    log.debug("tutionBillData", memoData.debit_memo);
                     context.write({
                         key: jsonfilename + "_" + k + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                         value: {
@@ -164,8 +148,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             }
             else {
                 var memoData = resultData;
-                log.debug("tutionBillData", memoData.debit_memo);
-
                 context.write({
                     key: jsonfilename + "_1" + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                     value: {
@@ -185,8 +167,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 // log.debug("resultData", resultData);
                 for (var k = 0; k < resultData.length; k++) {
                     var memoData = resultData[k];
-                    log.debug("tutionBillData", memoData.credit_memo);
-                    log.audit("MAP PHASE - Writing to reduce (credit memo array)", "fileID being passed: " + fileID + ", filename: " + jsonfilename + ", index: " + k);
                     context.write({
                         key: jsonfilename + "_" + k + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                         value: {
@@ -202,9 +182,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             }
             else {
                 var memoData = resultData;
-                log.debug("tutionBillData", memoData.credit_memo);
-                log.audit("MAP PHASE - Writing to reduce (single)", "fileID being passed: " + fileID + ", filename: " + jsonfilename);
-
                 context.write({
                     key: jsonfilename + "_1" + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                     value: {
@@ -224,7 +201,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 // log.debug("resultData", resultData);
                 for (var k = 0; k < resultData.length; k++) {
                     var memoData = resultData[k];
-                    log.debug("tutionBillData", memoData.student_info);
                     context.write({
                         key: jsonfilename + "_" + k + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                         value: {
@@ -240,8 +216,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             }
             else {
                 var memoData = resultData;
-                log.debug("tutionBillData", memoData.student_info);
-
                 context.write({
                     key: jsonfilename + "_1" + Math.floor((Math.random() * 100000000) + 1) + Math.floor((Math.random() * 100000000) + 1),
                     value: {
@@ -260,54 +234,42 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
     function reduce(context) {
 
         try {
-            log.debug("context.key", context.key)
-            log.debug("context.Value", context)
-            log.debug("context.Value", context.values)
-
             var jsonlength = context.values;
-            log.debug("jsonLength", jsonlength);
             for (var g = 0; g < jsonlength.length; g++) {
-                var jsondata = JSON.parse(context.values[g]);
+                try {
+                    var jsondata = JSON.parse(context.values[g]);
 
-                var data = jsondata.creditmemoData;
-                var custRecordId = jsondata.custRecordId;
-                var customrecordtype = jsondata.customrecordtype;
-                var recordtype = jsondata.recordtype;
-                var filename = jsondata.filename;
-                var fileID = jsondata.fileID;
-                log.audit('REDUCE PHASE - Data received', data);
-                log.audit('REDUCE PHASE - fileID received', "fileID: " + fileID + ", Type: " + typeof fileID + ", custRecordId: " + custRecordId);
-                log.audit('REDUCE PHASE - Full jsondata', JSON.stringify(jsondata));
+                    var data = jsondata.creditmemoData;
+                    var custRecordId = jsondata.custRecordId;
+                    var customrecordtype = jsondata.customrecordtype;
+                    var recordtype = jsondata.recordtype;
+                    var filename = jsondata.filename;
+                    var fileID = jsondata.fileID;
 
-                if (recordtype == "enrollwithdrawal") {
-                    var getRefNo = data.enr_refno;
-                }
-                else {
-                    var getRefNo = data.refno;
-                }
-                log.debug('Get ID', getRefNo);
+                    if (recordtype == "enrollwithdrawal") {
+                        var getRefNo = data.enr_refno;
+                    }
+                    else {
+                        var getRefNo = data.refno;
+                    }
 
-                log.debug("recordtype", recordtype);
-                var existinggetRefNoSearchResult;
-                if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
-                    existinggetRefNoSearchResult = searchExistingCreditMemo(getRefNo);
-                }
-                else {
-                    existinggetRefNoSearchResult = searchExistingDebitMemo(getRefNo);
-                }
-                log.debug('Existing Transaction found==>', JSON.stringify(existinggetRefNoSearchResult));
+                    var existinggetRefNoSearchResult;
+                    if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
+                        existinggetRefNoSearchResult = searchExistingCreditMemo(getRefNo);
+                    }
+                    else {
+                        existinggetRefNoSearchResult = searchExistingDebitMemo(getRefNo);
+                    }
+                    if (existinggetRefNoSearchResult.length > 0) {
+                        createError("Record Already existing", getRefNo, "", "", filename, custRecordId, customrecordtype);
+                        log.error('Existing Transaction ID', existinggetRefNoSearchResult[0].getValue('internalid'));
+                    }
 
-                if (existinggetRefNoSearchResult.length > 0) {
-                    var existingCreditMemoID = existinggetRefNoSearchResult[0].getValue('internalid');
-                    createError("Record Already existing", getRefNo, "", "", filename, custRecordId, customrecordtype);
-                    log.error('Existing Transaction ID', existingCreditMemoID);
-                    // }
-                }
-
-                if (existinggetRefNoSearchResult.length == 0) {
-                    log.audit('REDUCE PHASE - Calling createCreditMemoRecord', "fileID being passed: " + fileID + ", refno: " + getRefNo);
-                    var createCreditMemoRec = createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
-                    log.debug('Record Created', createCreditMemoRec);
+                    if (existinggetRefNoSearchResult.length == 0) {
+                        createCreditMemoRecord(data, recordtype, filename, custRecordId, customrecordtype, fileID);
+                    }
+                } catch (e) {
+                    log.error("error reduce - item " + g, e);
                 }
             }
         } catch (e) {
@@ -342,16 +304,12 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             name: 'internalid'
         }));
 
-        log.audit('Search Result');
-
         var Results = search.create({
             type: 'invoice',
             filters: searchFilter,
             columns: searchColumns
         }).run().getRange(0, 1000);
 
-        log.audit('Search Result', Results);
-        log.audit('Search Length', Results.length);
         return Results;
     }
 
@@ -386,7 +344,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 columns: searchColumns
             }).run().getRange({ start: startIndex, end: startIndex + 1000 });
 
-            log.debug("results", result)
             for (var i = 0; i < result.length; i++) {
                 var custom_id = result[i].getValue("internalid");
                 recordIds.push(custom_id);
@@ -430,7 +387,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 columns: searchTutionBillColumns
             }).run().getRange({ start: startIndex, end: startIndex + 1000 });
 
-            log.debug("results", result)
             for (var i = 0; i < result.length; i++) {
                 var custom_id = result[i].getValue("internalid");
                 recordIds.push(custom_id);
@@ -470,25 +426,18 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             name: 'internalid'
         }));
 
-        log.audit('Search Result');
-
         var creditResults = search.create({
             type: 'creditmemo',
             filters: searchCreditFilter,
             columns: searchCreditColumns
         }).run().getRange(0, 10);
 
-        log.audit('Search Result after');
-        log.audit('Search Result', creditResults);
-        log.audit('Search Length', creditResults.length);
         return creditResults;
     }
 
     function createCreditMemoRecord(jsonData, recordtype, filename, custRecordId, customrecordtype, fileID) {
 
         try {
-            log.audit('CREATE FUNCTION - Parameters received', "recordtype: " + recordtype + ", fileID: " + fileID + ", custRecordId: " + custRecordId + ", filename: " + filename);
-
             var auto_pay = true;
             if (recordtype == "enrollwithdrawal") {
                 var refno = jsonData.enr_refno;
@@ -619,18 +568,13 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
             var item_present = true;
 
-            log.debug("detail", detail);
-            // var customform = "118";
-
             var entityId = searchExistingStudents(student_number);
 
             if (entityId.length <= 0) {
                 createError("entity is not available/Invalid", refno, student_number, jsonData, filename, custRecordId, customrecordtype)
             }
             else {
-                log.debug("entityId", entityId);
                 var intid = entityId[0].getValue("internalid");
-                log.debug("entityId", intid)
 
                 if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
 
@@ -661,7 +605,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         isDynamic: true
                     });
 
-                    log.debug("myEnvType", myEnvType)
 
                     newRecord.setValue({
                         fieldId: 'customform',
@@ -669,21 +612,11 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     });
 
                     // Set reference to JSON file
-                    log.audit('CREDIT MEMO - Before setting custbody_st_json_file', "fileID value: " + fileID + ", Type: " + typeof fileID + ", isEmpty: " + (fileID == '') + ", isNull: " + (fileID == null) + ", isUndefined: " + (fileID == undefined) + ", refno: " + refno);
-
                     if (fileID != '' && fileID != null && fileID != undefined) {
-                        try {
-                            log.audit('CREDIT MEMO - Setting custbody_st_json_file', "fileID: " + fileID + ", refno: " + refno);
-                            newRecord.setValue({
-                                fieldId: 'custbody_st_json_file',
-                                value: fileID
-                            });
-                            log.audit('CREDIT MEMO - custbody_st_json_file SET SUCCESSFULLY', "fileID: " + fileID);
-                        } catch (e) {
-                            log.error('CREDIT MEMO - Error setting custbody_st_json_file', "Error: " + e + ", fileID: " + fileID + ", refno: " + refno);
-                        }
-                    } else {
-                        log.error('CREDIT MEMO - custbody_st_json_file NOT SET', "fileID is empty/null/undefined. fileID: " + fileID + ", refno: " + refno + ", custRecordId: " + custRecordId);
+                        newRecord.setValue({
+                            fieldId: 'custbody_st_json_file',
+                            value: fileID
+                        });
                     }
 
                 }
@@ -758,8 +691,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         operator: 'is'
                     });
 
-                    log.debug("options", options);
-                    log.debug("options[0].value", options[0].value);
                     newRecord.setValue({
                         fieldId: 'location',
                         value: options[0].value
@@ -780,9 +711,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         filter: netsuite_program,
                         operator: 'is'
                     });
-                    log.debug("options", options);
-                    log.debug("options[0].value", options[0].value);
-
                     newRecord.setValue({
                         fieldId: 'department',
                         value: options[0].value
@@ -837,9 +765,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         filter: year_level_desc,
                         operator: 'is'
                     });
-                    log.debug("options", options);
-                    log.debug("options[0].value", options[0].value);
-
                     newRecord.setValue({
                         fieldId: 'class',
                         value: options[0].value
@@ -869,8 +794,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                             operator: 'is'
                         });
 
-                        log.debug("options terms", options);
-                        log.debug("options[0].value terms", options[0].value);
                         newRecord.setValue({
                             fieldId: 'terms',
                             value: options[0].value
@@ -885,9 +808,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         filter: school_year,
                         operator: "is",
                     });
-                    log.debug("options school_year", options);
-                    log.debug("options[0].value school_year", options[0].value);
-
                     newRecord.setValue({
                         fieldId: "cseg__tip_sycseg",
                         value: options[0].value,
@@ -975,8 +895,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
 
 
-                log.audit(' detail', detail);
-                log.audit(' detail', detail.length);
                 if (detail.length > 0) {
                     for (var i = 0; i < detail.length; i++) {
                         if (item_present) {
@@ -989,8 +907,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
                                 var acct_code = detail[i].acct_code
 
-                                log.audit('acct_code', acct_code);
-                                log.audit(' balance', balance);
                                 var searchFilter = [];
                                 var searchColumns = [];
 
@@ -1015,10 +931,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                     filters: searchFilter,
                                     columns: searchColumns
                                 }).run().getRange(0, 1000);
-                                log.audit('Search Result', Results);
-                                log.audit('Search Length', Results.length);
-
-
 
                                 if (Results.length > 0) {
                                     newRecord.selectNewLine('item');
@@ -1046,8 +958,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                     balance = balance.replace(",", "");
                                 }
 
-                                log.audit('acct_code', acct_code);
-                                log.audit(' balance', balance);
                                 var searchFilter = [];
                                 var searchColumns = [];
 
@@ -1072,8 +982,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                     filters: searchFilter,
                                     columns: searchColumns
                                 }).run().getRange(0, 1000);
-                                log.audit('Search Result', Results);
-                                log.audit('Search Length', Results.length);
 
                                 if (Results.length > 0) {
                                     newRecord.selectNewLine('item');
@@ -1094,7 +1002,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     }
                 }
 
-                log.debug("processed to course");
                 if (item_present) {
                     if (course.length > 0) {
                         for (var i = 0; i < course.length; i++) {
@@ -1107,9 +1014,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
 
                                     balance = balance * -1
 
-                                    log.audit('acct_code', acct_code);
-                                    log.audit('acct_code', acct_code);
-                                    log.audit(' balance', balance);
                                     var searchFilter = [];
                                     var searchColumns = [];
 
@@ -1134,8 +1038,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                         filters: searchFilter,
                                         columns: searchColumns
                                     }).run().getRange(0, 1000);
-                                    log.audit('Search Result', Results);
-                                    log.audit('Search Length', Results.length);
 
                                     if (Results.length > 0) {
 
@@ -1164,9 +1066,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                         balance = balance.replace(",", "");
                                     }
 
-                                    log.audit('acct_code', acct_code);
-                                    log.audit('acct_code', acct_code);
-                                    log.audit(' balance', balance);
                                     var searchFilter = [];
                                     var searchColumns = [];
 
@@ -1191,8 +1090,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                         filters: searchFilter,
                                         columns: searchColumns
                                     }).run().getRange(0, 1000);
-                                    log.audit('Search Result', Results);
-                                    log.audit('Search Length', Results.length);
 
                                     if (Results.length > 0) {
 
@@ -1373,7 +1270,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                     var to_create_lumpsum_inv = false;
                     var lumpsum_due_date;
                     if (item_present) {
-                        log.debug("terms length", terms.length);
                         if (terms.length > 0) {
 
                             if (term_description != '' && term_description != null && term_description != undefined) {
@@ -1382,10 +1278,7 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                     filter: term_description,
                                     operator: 'is'
                                 });
-                                log.debug("term_description", options);
                                 if (options.length > 0) {
-
-                                    log.debug("options[0].term_description", options[0].value);
                                     newRecord.setValue({
                                         fieldId: 'terms',
                                         value: options[0].value
@@ -1417,9 +1310,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                         filters: searchFilter,
                                         columns: searchColumns
                                     }).run().getRange(0, 1000);
-                                    log.debug('Search Result acct_code', Results);
-                                    log.debug('Search Length acct_code', Results.length);
-
                                     if (Results.length > 0) {
                                         newRecord.setValue({
                                             fieldId: 'overrideinstallments',
@@ -1442,7 +1332,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                             newRecord.setCurrentSublistValue('installment', 'duedate', new Date(due_date));
                                             // newRecord.setCurrentSublistValue('installment', 'status', "Unpaid");
                                             newRecord.setCurrentSublistValue('installment', 'amount', amount_due);
-                                            log.debug('Amount', amount_due);
                                             newRecord.commitLine('installment');
                                         }
                                     }
@@ -1550,23 +1439,21 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                 //     }
                 // }
 
-                log.audit("Done item", newRecord);
+                // Set JSON file reference last, after autoapply, to prevent re-sourcing from overwriting it
+                if ((recordtype == "creditmemo" || recordtype == "enrollwithdrawal") && fileID != '' && fileID != null && fileID != undefined) {
+                    newRecord.setValue({
+                        fieldId: 'custbody_st_json_file',
+                        value: fileID
+                    });
+                }
                 if (item_present) {
                     var recordid = newRecord.save({
                         enableSourcing: true,
                         ignoreMandatoryFields: true
                     });
                     if (recordid) {
-                        log.audit('Details', "New Record Created Successfully==>" + recordid);
-
-                        // Verify if custbody_st_json_file was set for credit memo
                         if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
-                            var verifyLookup = search.lookupFields({
-                                type: recordtype == "creditmemo" ? record.Type.CREDIT_MEMO : record.Type.CREDIT_MEMO,
-                                id: recordid,
-                                columns: ['custbody_st_json_file']
-                            });
-                            log.audit('VERIFICATION - custbody_st_json_file after save', "recordid: " + recordid + ", custbody_st_json_file: " + JSON.stringify(verifyLookup['custbody_st_json_file']) + ", Expected fileID: " + fileID);
+                            log.audit('custbody_st_json_file set', "recordid: " + recordid + ", fileID: " + fileID);
                         }
                         if (recordtype == "debitmemo") {
 
@@ -1584,7 +1471,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                     sublistId: 'credit'
                                 });
 
-                                log.debug("Number Lines", numLines);
                                 var ApplyAmount = 0;
 
                                 if (numLines > 0) {
@@ -1613,9 +1499,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                             sublistId: 'credit'
                                         });
                                     }
-
-                                    log.debug("ApplyAmt", ApplyAmount);
-
 
                                     //check the apply credits and compare the amount 
                                     //Only apply those invoices with count of total credits of accept payments from invoice
@@ -1654,11 +1537,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                                                     fieldId: 'due',
                                                                     line: m
                                                                 });
-                                                                log.debug("amt_due", amt_due)
-                                                                log.debug("ApplyAmount", ApplyAmount)
                                                                 if (ApplyAmount > amt_due) {
                                                                     ApplyAmount = ApplyAmount - amt_due;
-                                                                    log.debug("Inside installment Apply ApplyAmount", ApplyAmount)
                                                                     invoiceRecord.selectLine({
                                                                         sublistId: 'apply',
                                                                         line: m
@@ -1680,8 +1560,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                                                     });
                                                                 }
                                                                 else {
-
-                                                                    log.debug("Inside installment else Apply ApplyAmount", ApplyAmount)
                                                                     invoiceRecord.selectLine({
                                                                         sublistId: 'apply',
                                                                         line: m
@@ -1716,11 +1594,8 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                                                     line: m
                                                                 });
 
-                                                                log.debug("amt_due", amt_due)
-                                                                log.debug("ApplyAmount", ApplyAmount)
                                                                 if (ApplyAmount > amt_due) {
                                                                     ApplyAmount = ApplyAmount - amt_due;
-                                                                    log.debug("Inside inv ref Apply ApplyAmount", ApplyAmount)
                                                                     invoiceRecord.selectLine({
                                                                         sublistId: 'apply',
                                                                         line: m
@@ -1742,7 +1617,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                                                     });
                                                                 }
                                                                 else {
-                                                                    log.debug("Inside inv ref else Apply ApplyAmount", ApplyAmount)
                                                                     invoiceRecord.selectLine({
                                                                         sublistId: 'apply',
                                                                         line: m
@@ -1775,7 +1649,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                         var paymentMemoRecord = invoiceRecord.save({
                                             ignoreMandatoryFields: true
                                         });
-                                        log.debug("Payment Applied Successfully", paymentMemoRecord);
 
                                         return recordid
                                     }
@@ -1785,8 +1658,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                                 createError("Created Invoice but applying payment having an error", enr_refno, student_number, jsonData, filename, custRecordId, customrecordtype);
                             }
                         }
-                        log.audit("recordid", recordid);
-                        log.audit('Details', "New TutionBill scholar Created Successfully==>", recordid);
                         return recordid;
 
                     }
@@ -1905,9 +1776,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             filters: searchStudFilter,
             columns: searchStudColumns
         }).run().getRange(0, 1000);
-        log.audit('invoice Search Result', studentResults);
-        log.audit('invoice Search Length', studentResults.length);
-
         return studentResults;
 
     }
@@ -1939,9 +1807,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             filters: searchStudFilter,
             columns: searchStudColumns
         }).run().getRange(0, 1000);
-        log.audit('Student Search Result', studentResults);
-        log.audit('Student Search Length', studentResults.length);
-
         return studentResults;
 
     }
@@ -1987,7 +1852,6 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
             //     end: startIndex + 1000
             // });
             // var result = searchResults.run().getRange({ start: startIndex, end: startIndex + 1000 });
-            log.debug("results", result)
             for (var i = 0; i < result.length; i++) {
                 var custom_id = result[i].getValue("internalid");
                 recordIds.push(custom_id);
