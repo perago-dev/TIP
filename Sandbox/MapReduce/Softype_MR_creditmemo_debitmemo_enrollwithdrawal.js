@@ -1452,6 +1452,9 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
                         ignoreMandatoryFields: true
                     });
                     if (recordid) {
+                        if (recordtype == "creditmemo" || recordtype == "enrollwithdrawal") {
+                            log.audit('custbody_st_json_file set', "recordid: " + recordid + ", fileID: " + fileID);
+                        }
                         if (recordtype == "debitmemo") {
 
                             try {
