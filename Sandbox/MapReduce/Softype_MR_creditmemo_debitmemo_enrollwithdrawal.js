@@ -13,7 +13,7 @@
  **@Dated       :  06 Feb 2023	
  **@Version     :  2.x
  **@Description :  fetch the custom record,Get all Credit memo,debit memo,enrollment withdrawal JSON and create a creditmemo,invoice record
- **@Updates     :  
+ **@Updates     :  May 18, 2026 - Grace L - Added a document search to get the JSON file and updated the credit memo creation logic to set the JSON file reference on the credit memo record. Also added duplicate prevention logic for credit memos based on the reference number.
  ***************************************************************************************/
 
 define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], function (record, search, log, file, runtime, url) {
@@ -76,20 +76,27 @@ define(['N/record', 'N/search', 'N/log', 'N/file', 'N/runtime', 'N/url'], functi
         var recordtype = jsondata.recordtype;
         var customrecordtype = jsondata.customrecordtype;
 
-        var lookup = search.lookupFields({
+        var fileSearchResults = search.create({
             type: customrecordtype,
-            id: custRecordId,
-            columns: ['file.name', 'file.internalid']
-        });
-        var filename = lookup['file.name'];
-        var jsonfilename = filename;
+            filters: [['internalidnumber', 'equalto', Number(custRecordId)]],
+            columns: [
+                search.createColumn({ name: 'internalid', join: 'file' }),
+                search.createColumn({ name: 'name', join: 'file' })
+            ]
+        }).run().getRange(0, 10);
 
         var fileID = null;
-        if (lookup['file.internalid'] && lookup['file.internalid'].length > 0) {
-            fileID = lookup['file.internalid'][0].value;
-        } else {
-            log.error("MAP PHASE - File field is empty or not populated", "custRecordId: " + custRecordId);
+        var jsonfilename = '';
+        if (fileSearchResults.length > 0) {
+            fileID = fileSearchResults[0].getValue({ name: 'internalid', join: 'file' });
+            jsonfilename = fileSearchResults[0].getValue({ name: 'name', join: 'file' });
         }
+
+        if (!fileID) {
+            log.error("MAP PHASE - File field is empty or not populated", "custRecordId: " + custRecordId);
+            return;
+        }
+
         var fileObj = file.load({
             id: fileID
         });
