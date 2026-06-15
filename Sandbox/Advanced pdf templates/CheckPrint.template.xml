@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+	<head>
+		<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}"
+			src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}"
+			src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+		<#if .locale == "zh_CN">
+		<link name="NotoSansCJKsc" type="font" subtype="opentype"
+			src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+		<#elseif .locale == "zh_TW">
+		<link name="NotoSansCJKtc" type="font" subtype="opentype"
+			src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+		<#elseif .locale == "ja_JP">
+		<link name="NotoSansCJKjp" type="font" subtype="opentype"
+			src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+		<#elseif .locale == "ko_KR">
+		<link name="NotoSansCJKkr" type="font" subtype="opentype"
+			src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+		<#elseif .locale == "th_TH">
+			<link name="NotoSansThai" type="font" subtype="opentype"
+				src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}"
+				bytes="2" />
+		</#if>
+		<style type="text/css">
+			* {
+				font-family: "Bookman Old Style", Georgia, serif;
+			} 
+			.check table { 
+				position: relative;
+				overflow: hidden; 
+				font-size: 8pt; 
+			} 
+			td p { 
+				align:left 
+			} 		
+		</style>
+	</head>
+	<body padding="0.0in 0.1in 1in 0.8in" style="padding-top: -10px;">
+
+		<div
+			style="position: relative;font-family: Helvetica,sans-serif; page-break-inside: avoid;font-size: 12px;">
+
+			<#if record.custbody_check_monthwords> 
+				<table style="position: absolute; overflow: hidden; left: 344pt; top: 30.62pt; width: 234px;"><tr>
+				<td align="right" style="width: 158px; font-size: 12pt; ">${rec.newDate}</td>
+				</tr></table>
+			<#else>
+
+				<#assign cts = record.custbody_tip_checkdate?split("/")>
+				<#if record.custbody_tip_checkdate?length == 10>
+					<table style="position: absolute; overflow: hidden; left: 297pt; top: 22.62pt; width: 260px;"><tr>
+					<td align="right" style="width: 158px; font-size: 11pt; "><strong><#list cts as ct> <#assign newCt = ct?replace("", "&nbsp; &nbsp;")>${newCt} </#list> </strong></td>
+					</tr></table>
+				<#else>
+					<table style="position: absolute; overflow: hidden; left: 299pt; top: 32.62pt; width: 260px;"><tr>
+					<td align="right" style="width: 158px;"><strong><#list cts as ct> <#assign newCt = ct?replace("", "&nbsp; &nbsp;")>${newCt} </#list> </strong></td>
+					</tr></table>
+				</#if>
+			</#if>
+		</div>
+
+		<div
+			style="position: relative;font-family: Helvetica,sans-serif; padding-top: -40pt; height: 250pt;width: 612pt;page-break-inside: avoid;font-size: 12px;">
+			<table
+				style="position: absolute; overflow: hidden; left: 290pt; top: 92pt; height: 18pt; width: 234px;">
+				<tr>
+					<td align="right" style="width: 224px; text-align: center; font-size: 12pt;">&nbsp; &nbsp; &nbsp;
+			&nbsp; &nbsp; &nbsp; &nbsp;${record.payment?replace('PHP','')}</td>
+				</tr>
+			</table> &nbsp;<br />&nbsp;
+			&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<br /><br /><br /><br /><br />
+			&nbsp;
+			<div style="text-align: right;">&nbsp;</div>
+			
+			<table align="right"
+				style="height: 18pt; left: 30pt; overflow: hidden; position: absolute; top: 88.12pt; width: 587px;">
+				<tr>
+					<#if rec.payee?length gt 45 >
+						<td style="width: 577px; font-size: 11pt;">${rec.payee}</td>
+					<#else>
+						<td style="width: 577px; font-size: 12pt;">${rec.payee}</td>
+					</#if>
+				</tr>
+			</table>
+			
+			<table
+				style="position: absolute;overflow: hidden;left: 15pt;top: 112.96pt;height: 18pt;width: 572pt;">
+				<tr>
+					<td style="font-size: 12pt;">${rec.inWords?capitalize}</td>
+				</tr>
+			</table>
+			&nbsp;</div>
+
+	</body>
+</pdf>
