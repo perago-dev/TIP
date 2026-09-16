@@ -1,0 +1,18 @@
+{
+  "name": "mason",
+  "version": "2.0.0",
+  "status": "stable",
+  "maturity": "Production ready — commercial and support modes",
+  "description": "Technical patterns, standards, and code health audits for Softype SuiteScript development. Produces the Mason Code Health Report: 5-dimension before/after scoring, syntax-highlighted before/after fixes, and a Carter handoff for the deployment engagement.",
+  "type": "operational",
+  "dependencies": [
+    "softype-sage",
+    "brand"
+  ],
+  "author": "Softype",
+  "tags": ["suitescript", "integrations", "data-migration", "code-review", "patterns", "standards"],
+  "_source": "SKILL.md frontmatter is the source of truth",
+  "compatibility": {
+    "claude_code": ">=1.0.0"
+  }
+}

@@ -1,0 +1,87 @@
+name: Claude Code Review
+
+# Mason-standard SuiteScript review of every PR diff via Claude Code.
+# Requires the CLAUDE_CODE_OAUTH_TOKEN repo/org secret. If the secret is absent
+# the job ends GREEN with a "skipped" log line so CI is never red for a missing
+# token; once the secret is added the review runs automatically.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claude-review:
+    name: claude-review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect Claude token
+        id: guard
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "Mason review skipped: CLAUDE_CODE_OAUTH_TOKEN secret not set on this repo"
+          fi
+
+      - name: Checkout repository
+        if: ${{ steps.guard.outputs.has_token == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Claude Code
+        if: ${{ steps.guard.outputs.has_token == 'true' }}
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code Review (Mason standards)
+        if: ${{ steps.guard.outputs.has_token == 'true' }}
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get diff of changed JS files only
+          git diff origin/${{ github.base_ref }}...HEAD \
+            -- '*.js' \
+               ':!**/node_modules/**' \
+            > /tmp/pr_diff.txt
+
+          cat > /tmp/prompt.txt << 'PROMPT_EOF'
+          You are reviewing a pull request on a NetSuite SuiteScript support repo managed by Softype.
+
+          Review standard (Mason technical standards):
+          - record.load / record.save inside loops = governance violation. Flag as [MUST] fix.
+          - search.create with no result limit and no pagination = will truncate at 1000. Flag as [MUST].
+          - ignoreMandatoryFields: true = do not use. Flag as [MUST].
+          - Commented-out validation or fail-open save patterns = do not ship. Flag as [MUST].
+          - Hardcoded numeric literals assigned to field IDs = should be named constants. Flag as [SHOULD].
+          - console.log in server-side scripts (UE, MR, SS, RL) = use log.debug. Flag as [SHOULD].
+          - Same fix applied to one copy of a script but not others in sibling folders = flag as [NOTE].
+          - Missing @NApiVersion or @NScriptType JSDoc header = flag as [SHOULD].
+
+          State your verdict first: Approve or Request Changes.
+          Use [MUST] for blockers, [SHOULD] for important improvements, [NOTE] for observations.
+          Do not comment on formatting or style unless it violates a rule above.
+          If the diff is empty or contains no JS changes, approve immediately.
+
+          PROMPT_EOF
+
+          cat /tmp/pr_diff.txt >> /tmp/prompt.txt
+
+          cat /tmp/prompt.txt | claude -p > /tmp/review.md
+
+          printf '## Claude Code Review (Mason)\n\n' > /tmp/comment.md
+          cat /tmp/review.md >> /tmp/comment.md
+
+          gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment.md
+
+          # Warn only for now — uncomment to start blocking on [MUST] issues
+          # if grep -qi "request changes" /tmp/review.md; then
+          #   exit 1
+          # fi
