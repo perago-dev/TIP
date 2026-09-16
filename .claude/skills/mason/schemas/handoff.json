@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mason Deployment Handoff",
+  "description": "Schema for handing off a completed Mason audit to Carter for the deployment engagement. Generated at the end of every commercial-mode audit.",
+  "type": "object",
+  "required": ["audit_id", "client", "mode", "scores", "findings", "deployment_scope"],
+  "properties": {
+    "audit_id": {
+      "type": "string",
+      "description": "e.g. MASON-2026-001"
+    },
+    "client": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["commercial", "support"],
+      "description": "commercial = full deliverable + deployment upsell. support = internal fix, no deliverable."
+    },
+    "audit_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "files_audited": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scores": {
+      "type": "object",
+      "description": "Before and after scores for all five dimensions. Required for commercial mode.",
+      "required": ["security", "governance", "documentation", "maintainability", "functionality"],
+      "properties": {
+        "security":        { "$ref": "#/$defs/score_pair" },
+        "governance":      { "$ref": "#/$defs/score_pair" },
+        "documentation":   { "$ref": "#/$defs/score_pair" },
+        "maintainability": { "$ref": "#/$defs/score_pair" },
+        "functionality":   { "$ref": "#/$defs/score_pair" }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "All findings from the audit. In commercial mode, all should be status: fixed.",
+      "items": { "$ref": "#/$defs/finding_summary" }
+    },
+    "deployment_scope": {
+      "type": "object",
+      "description": "What is sitting on the branch, ready to deploy.",
+      "required": ["branch", "files_changed", "tests_added"],
+      "properties": {
+        "branch": {
+          "type": "string",
+          "description": "Git branch containing the fixes."
+        },
+        "files_changed": {
+          "type": "integer",
+          "description": "Number of script files modified."
+        },
+        "tests_added": {
+          "type": "integer",
+          "description": "Total test cases added across all findings."
+        },
+        "estimated_deploy_hours": {
+          "type": "number",
+          "description": "Softype estimate to deploy the branch. Used to scope the follow-on engagement."
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High"],
+          "description": "Deployment risk based on scope of changes."
+        },
+        "deploy_notes": {
+          "type": "string",
+          "description": "Any notes for Carter about the deployment (sandbox testing needed, deployment order, etc.)."
+        }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "description": "Commercial engagement pricing context.",
+      "properties": {
+        "audit_fee": {
+          "type": "number",
+          "description": "Audit fee charged (default 2000). Credited back if client signs deployment engagement."
+        },
+        "deployment_estimate": {
+          "type": "number",
+          "description": "Estimated deployment engagement fee."
+        }
+      }
+    },
+    "recommended_next_skill": {
+      "type": "string",
+      "description": "Always carter for commercial mode.",
+      "default": "carter"
+    }
+  },
+  "$defs": {
+    "score_pair": {
+      "type": "object",
+      "required": ["before", "after"],
+      "properties": {
+        "before": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Score at intake, before fixes. Null if insufficient files to score a dimension."
+        },
+        "after": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Score after all fixes. Must be >= 3 if any MUSTs existed. Null if insufficient files to score a dimension."
+        },
+        "level_before": {
+          "type": "string",
+          "enum": ["Critical", "Weak", "Acceptable", "Strong", "Exemplary"]
+        },
+        "level_after": {
+          "type": "string",
+          "enum": ["Critical", "Weak", "Acceptable", "Strong", "Exemplary"]
+        },
+        "must_count": { "type": "integer", "minimum": 0 },
+        "should_count": { "type": "integer", "minimum": 0 },
+        "consider_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "finding_summary": {
+      "type": "object",
+      "required": ["id", "dimension", "severity", "headline", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "dimension": { "type": "string" },
+        "severity": { "type": "string" },
+        "headline": { "type": "string" },
+        "file": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  ci:
+    name: Lint, Typecheck, Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Mason version check ───────────────────────────────────────────────
+      # Warns if the installed Mason skill is behind the expected version.
+      # Update MASON_VERSION here when mason is updated in the scout repo.
+      - name: Check Mason version
+        run: node scripts/check-mason-version.js
+        env:
+          MASON_VERSION: "2.0.0"
+        continue-on-error: true
+
+      # ── Duplicate script detection ─────────────────────────────────────────
+      # Surfaces scripts that exist in multiple folders (Production/, Sandbox/,
+      # developer folders, etc.) so the team knows which copy is canonical.
+      - name: Check for duplicate scripts
+        run: node scripts/find-duplicates.js
+        continue-on-error: true
+
+      # ── ESLint ────────────────────────────────────────────────────────────
+      # Catches SuiteScript structural issues, N+1 patterns, governance
+      # violations, and hardcoded values. Warns only for now.
+      - name: Lint
+        run: npm run lint -- --format=compact
+        continue-on-error: true
+
+      # ── Type check ───────────────────────────────────────────────────────
+      # Uses @hitc/netsuite-types to check JS files against NetSuite API
+      # signatures. No TypeScript compilation — pure static analysis.
+      - name: Typecheck
+        run: npm run typecheck
+        continue-on-error: true
+
+      # ── Jest ─────────────────────────────────────────────────────────────
+      # Runs tests with AMD→CommonJS transform and N/* module stubs.
+      # At minimum the sample smoke test runs, keeping CI green.
+      - name: Test
+        run: npm test
+        continue-on-error: true

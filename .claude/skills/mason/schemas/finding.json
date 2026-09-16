@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mason Finding",
+  "description": "A single finding from a Mason code health audit. All findings in commercial mode should have status: fixed before the report is delivered.",
+  "type": "object",
+  "required": ["id", "dimension", "severity", "headline", "plain_english", "file", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^M-[0-9]{3}$",
+      "description": "Sequential finding ID. M-001, M-002, etc."
+    },
+    "dimension": {
+      "type": "string",
+      "enum": ["Security", "Governance", "Documentation", "Maintainability", "Functionality"],
+      "description": "Which of the five scoring dimensions this finding belongs to."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["must", "should", "consider"],
+      "description": "must = blocks deployment; should = fix in this engagement; consider = optional improvement."
+    },
+    "headline": {
+      "type": "string",
+      "description": "One sentence a non-developer can read and understand. 'Loop loads records one-by-one — will fail on large orders.' Not 'Governance violation in saveRecord handler.'"
+    },
+    "plain_english": {
+      "type": "object",
+      "required": ["problem", "fix"],
+      "properties": {
+        "problem": {
+          "type": "string",
+          "description": "1-2 sentences: what was wrong, and what could go wrong because of it. Written for the business owner, not the developer."
+        },
+        "fix": {
+          "type": "string",
+          "description": "1-2 sentences: what Softype changed, and why it's better now. No jargon."
+        }
+      }
+    },
+    "file": {
+      "type": "string",
+      "description": "Script filename, e.g. Softype_UE_IR_LotGeneration.js"
+    },
+    "line_refs": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "Line numbers where the issue appears. Optional but helpful."
+    },
+    "before_code": {
+      "type": "string",
+      "description": "The problematic code snippet. Keep it short — 3-15 lines. Enough to show the problem, not the entire file."
+    },
+    "after_code": {
+      "type": "string",
+      "description": "The fixed code snippet. Same scope as before_code."
+    },
+    "tests_added": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of test cases added to cover this finding. Should be > 0 for all must and should findings."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["fixed", "open"],
+      "description": "Commercial mode deliverable: all findings must be fixed before the report is presented to the customer."
+    }
+  },
+  "if": {
+    "properties": { "severity": { "const": "must" } },
+    "required": ["severity"]
+  },
+  "then": {
+    "required": ["before_code", "after_code"],
+    "properties": {
+      "before_code": { "minLength": 1 },
+      "after_code":  { "minLength": 1 }
+    }
+  }
+}
