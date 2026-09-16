@@ -1,0 +1,128 @@
+{
+  "repo": "TIP",
+  "date": "2026-09-16",
+  "commit": "3b09c03606add795efcabc2c68d0c91e00e2a42c",
+  "files_audited": 6,
+  "files_total": 11,
+  "scores": {
+    "Security": { "level": 5, "name": "Exemplary" },
+    "Governance": { "level": 4, "name": "Strong" },
+    "Documentation": { "level": 2, "name": "Weak" },
+    "Maintainability": { "level": 2, "name": "Weak" },
+    "Functionality": { "level": 2, "name": "Weak" }
+  },
+  "findings": [
+    {
+      "id": "M-001",
+      "dimension": "Functionality",
+      "severity": "must",
+      "headline": "Production's duplicate-invoice guard detects the duplicate, logs it, and lets the invoice save anyway",
+      "plain_english": {
+        "problem": "This script's entire job is to stop a second invoice being created against an enrollment reference that already has one. It correctly finds the duplicate and writes a record of it, but then never actually stops the save — the line that should block it is missing. The Sandbox copy of the same file already has the fix.",
+        "fix": "Add the missing throw that blocks the save, matching the Sandbox copy."
+      },
+      "file": "Production/UserEvent/Softype_TIP_UE_ValidateDupeInv.js",
+      "line_refs": [58, 87, 90],
+      "before_code": "        // Throw error to prevent invoice creation\n    }\n\n    log.debug('Validation Passed', 'No duplicate invoice found. Invoice creation allowed.');",
+      "after_code": "        // Throw error to prevent invoice creation\n        throw error.create({\n            name: 'DUPLICATE_INVOICE',\n            message: errorMsg\n        });\n    }\n\n    log.debug('Validation Passed', 'No duplicate invoice found. Invoice creation allowed.');",
+      "tests_added": 0,
+      "status": "open"
+    },
+    {
+      "id": "M-002",
+      "dimension": "Functionality",
+      "severity": "must",
+      "headline": "Money amounts are de-commafied with a single-replace, silently corrupting any amount with two or more thousands separators",
+      "plain_english": {
+        "problem": "Every money value read from an incoming payload has its commas stripped with .replace(\",\", \"\"), which only removes the FIRST comma in JavaScript. An amount like 1,234,567.89 becomes 1,234567.89, which fails to parse as a number. This exact pattern repeats about 40 times across all six integration scripts, and the correct all-commas version never appears anywhere in the repo.",
+        "fix": "Replace every single-comma .replace(\",\", \"\") on a money string with a global replace, .replace(/,/g, ''), or route all money parsing through one shared helper that does this correctly once."
+      },
+      "file": "Sandbox/MapReduce/Softype_MR_Journal_integration.js",
+      "line_refs": [142, 144],
+      "before_code": "if (paytype[0].hasOwnProperty('amount_paid')) {\n    amountpaid = paytype[0].amount_paid;\n    amountpaid = amountpaid.replace(\",\", \"\");\n}",
+      "after_code": "if (paytype[0].hasOwnProperty('amount_paid')) {\n    amountpaid = paytype[0].amount_paid;\n    amountpaid = amountpaid.replace(/,/g, '');\n}",
+      "tests_added": 0,
+      "status": "open"
+    },
+    {
+      "id": "M-003",
+      "dimension": "Documentation",
+      "severity": "must",
+      "headline": "No script in the repository records what it's deployed on",
+      "plain_english": {
+        "problem": "None of the 11 SuiteScript files declare @DeployedOn.",
+        "fix": "Add @DeployedOn to every script header, naming the record type(s) or transaction(s) it deploys on."
+      },
+      "file": "Production/UserEvent/Softype_TIP_UE_ValidateDupeInv.js",
+      "line_refs": [14, 17],
+      "before_code": "** @Author      :  Atharva Panchal\n** @Dated       :  11 December, 2025\n** @Version     :  2.x\n** @Description :  Validate if an invoice with the same enrollment reference (tranid) already exists and create error catcher record.",
+      "after_code": "** @Author      :  Atharva Panchal\n** @Dated       :  11 December, 2025\n** @Version     :  1.0\n** @DeployedOn  :  Invoice\n** @Description :  Validate if an invoice with the same enrollment reference (tranid) already exists and create error catcher record.\n** @Updates     :  v1.0 - Initial version.",
+      "tests_added": 0,
+      "status": "open"
+    },
+    {
+      "id": "M-004",
+      "dimension": "Documentation",
+      "severity": "should",
+      "headline": "5 of 11 files have no update history",
+      "plain_english": {
+        "problem": "5 of 11 files have no @Updates or @Update entry at all.",
+        "fix": "Backfill @Updates entries and require future edits to add to the log."
+      },
+      "file": "Sandbox/MapReduce/Softype_MR_Journal_integration.js",
+      "line_refs": [12, 16],
+      "before_code": "**@Author      :  Akash Chavan\n**@Dated       :  06 Feb 2023\t\n**@Version     :  2.x\n**@Description :  Load the Custom record and check the unprocessed Payment,create Payment\n**@Updates     :  ",
+      "after_code": "**@Author      :  Akash Chavan\n**@Dated       :  06 Feb 2023\n**@Version     :  1.0\n**@Description :  Load the Custom record and check the unprocessed Payment,create Payment\n**@Updates     :  v1.0 - Initial version.",
+      "tests_added": 0,
+      "status": "open"
+    },
+    {
+      "id": "M-005",
+      "dimension": "Governance",
+      "severity": "should",
+      "headline": "The RESTlet hardcodes a File Cabinet folder id and saves a custom record with none of its own fields populated",
+      "plain_english": {
+        "problem": "The folder incoming credit-memo JSON files are filed into is a literal number in the code, not a configurable parameter. Separately, the custom record this RESTlet creates is saved with no field values set at all — the only place the actual payload data ends up is inside the attached JSON file, not on the record itself.",
+        "fix": "Move the folder id to a script parameter, and populate the record's own fields (credit memo id, amount, date) from the payload before saving."
+      },
+      "file": "Sandbox/Restlet/softype_rl_creditmemo_integration.js",
+      "line_refs": [73, 87, 90],
+      "before_code": "var newRecord = record.create({\n    type: 'customrecord_tip_creditmemo_integration',\n    isDynamic: true\n});\n...\nfileObj.folder = 326;\nvar fileId = fileObj.save();\nvar recordid = newRecord.save();",
+      "after_code": "var folderId = runtime.getCurrentScript().getParameter({ name: 'custscript_tip_cm_folder' });\nvar newRecord = record.create({\n    type: 'customrecord_tip_creditmemo_integration',\n    isDynamic: true\n});\nnewRecord.setValue({ fieldId: 'custrecord_tip_cm_id', value: data.credit_memo });\n...\nfileObj.folder = folderId;\nvar fileId = fileObj.save();\nvar recordid = newRecord.save();",
+      "tests_added": 0,
+      "status": "open"
+    },
+    {
+      "id": "M-006",
+      "dimension": "Maintainability",
+      "severity": "should",
+      "headline": "The same ~15 helper functions are copy-pasted across up to six separate large scripts",
+      "plain_english": {
+        "problem": "Functions like searchExistingStudents, createError, and accountSearch are defined independently, with identical or near-identical bodies, in as many as six different 1,000-2,000 line scripts instead of living in one shared module. A fix made in one copy — as already happened with the duplicate-invoice guard — has no way to reach the others.",
+        "fix": "Extract the shared search and error-catcher helpers into one library module every integration script imports."
+      },
+      "file": "Sandbox/MapReduce/Softype_MR_Journal_integration.js",
+      "line_refs": null,
+      "before_code": null,
+      "after_code": null,
+      "tests_added": 0,
+      "status": "open"
+    },
+    {
+      "id": "M-007",
+      "dimension": "Governance",
+      "severity": "consider",
+      "headline": "getInputData materializes the full unprocessed-record list as an array rather than returning the search",
+      "plain_english": {
+        "problem": "Each integration script manually pages through its saved search in a loop and returns a plain array of ids, instead of returning the search object itself and letting the platform paginate natively. The manual pagination is implemented correctly and doesn't drop rows, so this is a style note, not a defect.",
+        "fix": "Consider returning the search.Search object directly from getInputData, per Mason's own Map/Reduce pattern guidance for large datasets."
+      },
+      "file": "Sandbox/MapReduce/Softype_MR_Journal_integration.js",
+      "line_refs": null,
+      "before_code": null,
+      "after_code": null,
+      "tests_added": 0,
+      "status": "open"
+    }
+  ]
+}
