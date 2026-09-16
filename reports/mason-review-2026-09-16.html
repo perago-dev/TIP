@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" class="st-dark st-polished">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mason Code Health Review — TIP — 16 September 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    :root {
+      --st-tangerine: #e46b1f; --st-tangerine-dim: rgba(228,107,31,0.15); --st-tangerine-glow: rgba(228,107,31,0.35);
+      --st-success: #34c759; --st-warning: #f59e0b; --st-danger: #ef4444;
+      --st-font: 'Manrope', Arial, sans-serif; --st-font-display: 'Familjen Grotesk', 'Manrope', Arial, sans-serif; --st-font-mono: 'JetBrains Mono', Consolas, monospace;
+      --st-space-2: 8px; --st-space-3: 12px; --st-space-4: 16px; --st-space-6: 24px; --st-space-8: 32px; --st-space-12: 48px;
+      --st-radius: 8px; --st-radius-lg: 12px; --st-radius-full: 9999px;
+      --bg: #0a0a0f; --surface: #1a1a24; --surface-raised: #222230;
+      --border: rgba(255,255,255,0.08); --border-subtle: rgba(255,255,255,0.04);
+      --text: #f5f5f7; --text-2: #a1a1a6; --text-muted: #6e6e73;
+    }
+    *,*::before,*::after { box-sizing: border-box; }
+    html, body { margin:0; font-family: var(--st-font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: var(--st-font-display); margin: 0 0 var(--st-space-4); line-height: 1.2; }
+    p { color: var(--text-2); margin: 0 0 var(--st-space-4); }
+    code { font-family: var(--st-font-mono); font-size: 0.85em; }
+    .nav { position: sticky; top:0; z-index:100; background: rgba(10,10,15,0.95); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); display:flex; overflow-x:auto; padding: 0 var(--st-space-8); scrollbar-width:none; }
+    .nav::-webkit-scrollbar { display:none; }
+    .nav-btn { flex-shrink:0; padding:16px 20px; background:none; border:none; border-bottom:2px solid transparent; color: var(--text-muted); font-family: var(--st-font); font-size:0.8125rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; white-space:nowrap; transition: color 150ms, border-color 150ms; }
+    .nav-btn:hover { color: var(--text-2); }
+    .nav-btn.active { color: var(--st-tangerine); border-bottom-color: var(--st-tangerine); }
+    .wrap { max-width:1100px; margin:0 auto; padding: 0 var(--st-space-8) var(--st-space-12); }
+    .tab-panel { display:none; padding-top: var(--st-space-12); }
+    .tab-panel.active { display:block; animation: fadeUp .3s ease; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
+    .hero { text-align:center; padding: var(--st-space-12) var(--st-space-8) var(--st-space-8); background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(228,107,31,0.08), transparent); border-bottom: 1px solid var(--border); }
+    .hero-eyebrow { display:inline-block; padding:4px 14px; border-radius: var(--st-radius-full); background: var(--st-tangerine-dim); color: var(--st-tangerine); font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom: var(--st-space-4); }
+    .hero h1 { font-size:2.5rem; font-weight:700; margin-bottom: var(--st-space-2); }
+    .hero-sub { color: var(--text-muted); font-size:0.9375rem; margin-bottom: var(--st-space-8); }
+    .hero-stats { display:inline-flex; gap:0; border:1px solid var(--border); border-radius: var(--st-radius-lg); overflow:hidden; flex-wrap:wrap; }
+    .hero-stat { padding: var(--st-space-3) var(--st-space-6); border-right:1px solid var(--border); text-align:center; }
+    .hero-stat:last-child { border-right:none; }
+    .hero-stat .val { font-family: var(--st-font-display); font-size:1.5rem; font-weight:700; color: var(--st-tangerine); }
+    .hero-stat .lbl { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-muted); margin-top:2px; }
+    .dim-grid { display:grid; grid-template-columns: repeat(5,1fr); gap: var(--st-space-4); margin: var(--st-space-8) 0; }
+    @media (max-width: 900px) { .dim-grid { grid-template-columns: repeat(2,1fr); } }
+    .dim-card { background: var(--surface); border:1px solid var(--border); border-radius: var(--st-radius-lg); padding: var(--st-space-4); text-align:center; transition: transform 150ms, box-shadow 150ms; }
+    .dim-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .dim-card .dim-name { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-muted); margin-bottom: var(--st-space-4); }
+    .dim-transform { display:flex; align-items:center; justify-content:center; gap: var(--st-space-3); margin-bottom: var(--st-space-3); }
+    .dim-score { display:flex; flex-direction:column; align-items:center; }
+    .dim-num { font-family: var(--st-font-display); font-size:1.75rem; font-weight:700; line-height:1; }
+    .dim-level { font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
+    .lvl-1 { color:#ef4444; } .lvl-2 { color:#f97316; } .lvl-3 { color:#f59e0b; } .lvl-4 { color:#e46b1f; } .lvl-5 { color:#34c759; }
+    .rings-row { display:flex; align-items:center; gap: var(--st-space-8); margin: var(--st-space-8) 0; flex-wrap:wrap; }
+    .ring-block { text-align:center; }
+    .ring-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-muted); margin-bottom: var(--st-space-3); }
+    .ring-svg { position:relative; display:inline-block; }
+    .ring-svg svg { transform: rotate(-90deg); display:block; }
+    .ring-svg circle { fill:none; stroke-width:10; }
+    .ring-svg .ring-bg { stroke: var(--border); }
+    .ring-val { position:absolute; top:50%; left:50%; transform: translate(-50%,-50%); text-align:center; pointer-events:none; }
+    .ring-val .num { font-family: var(--st-font-display); font-size:2rem; font-weight:700; line-height:1; }
+    .ring-val .sub { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color: var(--text-muted); margin-top:2px; }
+    .ring-name { font-size:0.875rem; font-weight:600; margin-top: var(--st-space-3); }
+    .rings-summary { flex:1; min-width:240px; }
+    .rings-summary h3 { font-size:1.5rem; margin-bottom: var(--st-space-3); }
+    .findings-section { margin-top: var(--st-space-12); }
+    .findings-section h3 { font-size:1rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-muted); margin-bottom: var(--st-space-6); padding-bottom: var(--st-space-3); border-bottom:1px solid var(--border); }
+    .finding-card { background: var(--surface); border:1px solid var(--border); border-radius: var(--st-radius-lg); margin-bottom: var(--st-space-6); overflow:hidden; }
+    .finding-card.sev-must { border-left:3px solid #ef4444; }
+    .finding-card.sev-should { border-left:3px solid #f59e0b; }
+    .finding-card.sev-consider { border-left:3px solid #3b82f6; }
+    .finding-head { padding: var(--st-space-4) var(--st-space-6); border-bottom:1px solid var(--border-subtle); display:flex; align-items:flex-start; gap: var(--st-space-3); flex-wrap:wrap; }
+    .finding-head h4 { flex:1; min-width:0; font-size:1rem; font-weight:600; margin:0; color: var(--text); }
+    .finding-body { padding: var(--st-space-6); }
+    .finding-plain { margin-bottom: var(--st-space-4); }
+    .finding-plain .prob-label, .finding-plain .fix-label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom: var(--st-space-2); }
+    .finding-plain .prob-label { color:#ef4444; }
+    .finding-plain .fix-label { color: var(--st-success); margin-top: var(--st-space-4); }
+    .finding-plain p { font-size:0.9375rem; line-height:1.6; color: var(--text); margin:0; }
+    .code-compare { display:grid; grid-template-columns:1fr 1fr; gap: var(--st-space-4); margin-top: var(--st-space-4); }
+    @media (max-width:700px) { .code-compare { grid-template-columns:1fr; } }
+    .code-panel { border-radius: var(--st-radius); overflow:hidden; }
+    .code-panel-before { border:1px solid rgba(239,68,68,0.25); }
+    .code-panel-after { border:1px solid rgba(52,199,89,0.25); }
+    .code-panel-label { padding: var(--st-space-2) var(--st-space-4); font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; }
+    .code-panel-before .code-panel-label { background: rgba(239,68,68,0.12); color:#ef4444; }
+    .code-panel-after .code-panel-label { background: rgba(52,199,89,0.12); color: var(--st-success); }
+    .code-panel pre { margin:0; font-size:0.78rem; }
+    .code-panel pre code { border-radius:0; }
+    .badge { display:inline-flex; align-items:center; padding:2px 10px; font-size:0.7rem; font-weight:700; border-radius: var(--st-radius-full); text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
+    .badge-must { background: rgba(239,68,68,0.15); color:#ef4444; }
+    .badge-should { background: rgba(245,158,11,0.15); color:#f59e0b; }
+    .badge-consider { background: rgba(59,130,246,0.15); color:#3b82f6; }
+    .badge-dim { background: var(--surface-raised); color: var(--text-2); }
+    .fix-row { display:flex; align-items:center; gap: var(--st-space-4); flex-wrap:wrap; padding: var(--st-space-4) var(--st-space-6); border-bottom:1px solid var(--border-subtle); }
+    .fix-row:last-child { border-bottom:none; }
+    .fix-id { font-family: var(--st-font-mono); font-size:0.8125rem; color: var(--text-muted); min-width:56px; }
+    .fix-headline { flex:1; min-width:0; font-size:0.9rem; color: var(--text); }
+    .fix-file { font-family: var(--st-font-mono); font-size:0.75rem; color: var(--text-muted); }
+    table { color: var(--text-2); }
+    .footer { margin-top: var(--st-space-12); padding: var(--st-space-8); border-top:1px solid var(--border); text-align:center; }
+    .footer p { font-size:0.8125rem; color: var(--text-muted); margin:0; line-height:2; }
+    @media print { .nav { display:none; } .tab-panel { display:block !important; page-break-before: always; } .tab-panel:first-of-type { page-break-before:auto; } .code-compare { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <nav class="nav"><button class="nav-btn active" onclick="showTab('exec', this)">Executive Summary</button><button class="nav-btn" onclick="showTab('security', this)">Security</button><button class="nav-btn" onclick="showTab('governance', this)">Governance</button><button class="nav-btn" onclick="showTab('documentation', this)">Documentation</button><button class="nav-btn" onclick="showTab('maintainability', this)">Maintainability</button><button class="nav-btn" onclick="showTab('functionality', this)">Functionality</button><button class="nav-btn" onclick="showTab('actions', this)">Required Actions</button></nav>
+  <header class="hero">
+    <div class="hero-eyebrow">Softype &middot; Mason 2.0.0 Code Health Review</div>
+    <h1>TIP</h1>
+    <p class="hero-sub">SuiteScript Audit &middot; 16 September 2026 &middot; Assessment only — no code changed</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val">6/11</div><div class="lbl">Files Audited</div></div>
+      <div class="hero-stat"><div class="val">7</div><div class="lbl">Issues Found</div></div>
+      <div class="hero-stat"><div class="val">3</div><div class="lbl">Must Fix</div></div>
+      <div class="hero-stat"><div class="val">3</div><div class="lbl">Should Fix</div></div>
+      <div class="hero-stat"><div class="val">1</div><div class="lbl">Consider</div></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <section id="tab-exec" class="tab-panel active">
+      <h2>Code Health — Before</h2>
+      <p style="max-width:640px">This is an assessment engagement — nothing was fixed. The scores below are the honest state of the codebase today, on <code>master</code> at <code>3b09c03606</code>.</p>
+      <div class="dim-grid">
+        <div class="dim-card">
+          <div class="dim-name">Security</div>
+          <div class="dim-transform">
+            <div class="dim-score">
+              <div class="dim-num lvl-5">5</div>
+              <div class="dim-level lvl-5">Exemplary</div>
+            </div>
+          </div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Governance</div>
+          <div class="dim-transform">
+            <div class="dim-score">
+              <div class="dim-num lvl-4">4</div>
+              <div class="dim-level lvl-4">Strong</div>
+            </div>
+          </div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Documentation</div>
+          <div class="dim-transform">
+            <div class="dim-score">
+              <div class="dim-num lvl-2">2</div>
+              <div class="dim-level lvl-2">Weak</div>
+            </div>
+          </div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Maintainability</div>
+          <div class="dim-transform">
+            <div class="dim-score">
+              <div class="dim-num lvl-2">2</div>
+              <div class="dim-level lvl-2">Weak</div>
+            </div>
+          </div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-name">Functionality</div>
+          <div class="dim-transform">
+            <div class="dim-score">
+              <div class="dim-num lvl-2">2</div>
+              <div class="dim-level lvl-2">Weak</div>
+            </div>
+          </div>
+        </div></div>
+      <div class="finding-card sev-must" style="margin-top: var(--st-space-8)">
+  <div class="finding-head">
+    <span class="badge badge-must">First review</span>
+    <h4>A duplicate-invoice guard that doesn't guard, and a money-parsing bug at scale</h4>
+  </div>
+  <div class="finding-body">
+    <p>TIP's SuiteScript is a set of large, single-purpose integration Map/Reduce jobs that turn incoming JSON payloads into journal entries, cash sales, and customer payments for a school's enrollment/billing system. Two real defects stand out. First, Production's duplicate-invoice guard &mdash; the User Event whose entire job is to stop a second invoice from being created against the same enrollment reference &mdash; detects the duplicate, writes an error record, and then lets the save proceed anyway, because the <code>throw</code> that should abort it is missing; the Sandbox copy of the exact same file already has the fix. Second, every money amount parsed from an incoming payload across all six Map/Reduce integration scripts is de-commafied with <code>.replace(",", "")</code>, which only removes the first comma in a string &mdash; a value like "1,234,567.89" becomes "1,234567.89", which fails to parse as a number. This repeats at roughly 40 call sites across every money field this integration touches, and the correct global-replace pattern appears nowhere in the repo. A third pattern is heavy duplication: the same ~15 helper functions are copy-pasted across up to six separate large scripts instead of one shared module.</p>
+  </div>
+</div>
+
+    </section>
+    
+    <section id="tab-security" class="tab-panel">
+      <div class="rings-row">
+        <div class="ring-block">
+          <div class="ring-label">Before</div>
+          <div class="ring-svg">
+            <svg width="130" height="130" viewBox="0 0 130 130">
+              <circle class="ring-bg" cx="65" cy="65" r="54"/>
+              <circle class="ring-progress" cx="65" cy="65" r="54" stroke="#34c759" stroke-dasharray="339" stroke-dashoffset="0" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-val"><div class="num lvl-5">5</div><div class="sub">/ 5</div></div>
+          </div>
+          <div class="ring-name lvl-5">Exemplary</div>
+        </div>
+        <div class="rings-summary">
+          <h3>Security: Exemplary</h3>
+          <p>No fixes were applied — this is an assessment. Since this dimension has no "after" state, only the before score is shown.</p>
+        </div>
+      </div>
+      <div class="findings-section">
+        <h3>0 Must Fix &middot; 0 Should Fix &middot; 0 Consider</h3>
+        <p style="color:var(--text-muted)">No findings in this dimension.</p>
+      </div>
+    </section>
+
+    <section id="tab-governance" class="tab-panel">
+      <div class="rings-row">
+        <div class="ring-block">
+          <div class="ring-label">Before</div>
+          <div class="ring-svg">
+            <svg width="130" height="130" viewBox="0 0 130 130">
+              <circle class="ring-bg" cx="65" cy="65" r="54"/>
+              <circle class="ring-progress" cx="65" cy="65" r="54" stroke="#e46b1f" stroke-dasharray="339" stroke-dashoffset="68" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-val"><div class="num lvl-4">4</div><div class="sub">/ 5</div></div>
+          </div>
+          <div class="ring-name lvl-4">Strong</div>
+        </div>
+        <div class="rings-summary">
+          <h3>Governance: Strong</h3>
+          <p>No fixes were applied — this is an assessment. Since this dimension has no "after" state, only the before score is shown.</p>
+        </div>
+      </div>
+      <div class="findings-section">
+        <h3>0 Must Fix &middot; 1 Should Fix &middot; 1 Consider</h3>
+        
+        <div class="finding-card sev-should">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-005</span>
+            <span class="badge badge-should">Should Fix &middot; Open</span>
+            <h4>The RESTlet hardcodes a File Cabinet folder id and saves a custom record with none of its own fields populated</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>The folder incoming credit-memo JSON files are filed into is a literal number in the code, not a configurable parameter. Separately, the custom record this RESTlet creates is saved with no field values set at all — the only place the actual payload data ends up is inside the attached JSON file, not on the record itself.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Move the folder id to a script parameter, and populate the record&#x27;s own fields (credit memo id, amount, date) from the payload before saving.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Sandbox/Restlet/softype_rl_creditmemo_integration.js &middot; lines 73, 87, 90</div>
+            <div class="code-compare"><div class="code-panel code-panel-before"><div class="code-panel-label">⚠ Current</div><pre><code class="language-javascript">var newRecord = record.create({
+    type: &#x27;customrecord_tip_creditmemo_integration&#x27;,
+    isDynamic: true
+});
+...
+fileObj.folder = 326;
+var fileId = fileObj.save();
+var recordid = newRecord.save();</code></pre></div><div class="code-panel code-panel-after"><div class="code-panel-label">✓ Recommended</div><pre><code class="language-javascript">var folderId = runtime.getCurrentScript().getParameter({ name: &#x27;custscript_tip_cm_folder&#x27; });
+var newRecord = record.create({
+    type: &#x27;customrecord_tip_creditmemo_integration&#x27;,
+    isDynamic: true
+});
+newRecord.setValue({ fieldId: &#x27;custrecord_tip_cm_id&#x27;, value: data.credit_memo });
+...
+fileObj.folder = folderId;
+var fileId = fileObj.save();
+var recordid = newRecord.save();</code></pre></div></div>
+          </div>
+        </div>
+
+        <div class="finding-card sev-consider">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-007</span>
+            <span class="badge badge-consider">Consider &middot; Open</span>
+            <h4>getInputData materializes the full unprocessed-record list as an array rather than returning the search</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>Each integration script manually pages through its saved search in a loop and returns a plain array of ids, instead of returning the search object itself and letting the platform paginate natively. The manual pagination is implemented correctly and doesn&#x27;t drop rows, so this is a style note, not a defect.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Consider returning the search.Search object directly from getInputData, per Mason&#x27;s own Map/Reduce pattern guidance for large datasets.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Sandbox/MapReduce/Softype_MR_Journal_integration.js</div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-documentation" class="tab-panel">
+      <div class="rings-row">
+        <div class="ring-block">
+          <div class="ring-label">Before</div>
+          <div class="ring-svg">
+            <svg width="130" height="130" viewBox="0 0 130 130">
+              <circle class="ring-bg" cx="65" cy="65" r="54"/>
+              <circle class="ring-progress" cx="65" cy="65" r="54" stroke="#f97316" stroke-dasharray="339" stroke-dashoffset="203" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-val"><div class="num lvl-2">2</div><div class="sub">/ 5</div></div>
+          </div>
+          <div class="ring-name lvl-2">Weak</div>
+        </div>
+        <div class="rings-summary">
+          <h3>Documentation: Weak</h3>
+          <p>No fixes were applied — this is an assessment. Since this dimension has no "after" state, only the before score is shown.</p>
+        </div>
+      </div>
+      <div class="findings-section">
+        <h3>1 Must Fix &middot; 1 Should Fix &middot; 0 Consider</h3>
+        
+        <div class="finding-card sev-must">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-003</span>
+            <span class="badge badge-must">Must Fix &middot; Open</span>
+            <h4>No script in the repository records what it&#x27;s deployed on</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>None of the 11 SuiteScript files declare @DeployedOn.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Add @DeployedOn to every script header, naming the record type(s) or transaction(s) it deploys on.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Production/UserEvent/Softype_TIP_UE_ValidateDupeInv.js &middot; lines 14, 17</div>
+            <div class="code-compare"><div class="code-panel code-panel-before"><div class="code-panel-label">⚠ Current</div><pre><code class="language-javascript">** @Author      :  Atharva Panchal
+** @Dated       :  11 December, 2025
+** @Version     :  2.x
+** @Description :  Validate if an invoice with the same enrollment reference (tranid) already exists and create error catcher record.</code></pre></div><div class="code-panel code-panel-after"><div class="code-panel-label">✓ Recommended</div><pre><code class="language-javascript">** @Author      :  Atharva Panchal
+** @Dated       :  11 December, 2025
+** @Version     :  1.0
+** @DeployedOn  :  Invoice
+** @Description :  Validate if an invoice with the same enrollment reference (tranid) already exists and create error catcher record.
+** @Updates     :  v1.0 - Initial version.</code></pre></div></div>
+          </div>
+        </div>
+
+        <div class="finding-card sev-should">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-004</span>
+            <span class="badge badge-should">Should Fix &middot; Open</span>
+            <h4>5 of 11 files have no update history</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>5 of 11 files have no @Updates or @Update entry at all.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Backfill @Updates entries and require future edits to add to the log.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Sandbox/MapReduce/Softype_MR_Journal_integration.js &middot; lines 12, 16</div>
+            <div class="code-compare"><div class="code-panel code-panel-before"><div class="code-panel-label">⚠ Current</div><pre><code class="language-javascript">**@Author      :  Akash Chavan
+**@Dated       :  06 Feb 2023	
+**@Version     :  2.x
+**@Description :  Load the Custom record and check the unprocessed Payment,create Payment
+**@Updates     :  </code></pre></div><div class="code-panel code-panel-after"><div class="code-panel-label">✓ Recommended</div><pre><code class="language-javascript">**@Author      :  Akash Chavan
+**@Dated       :  06 Feb 2023
+**@Version     :  1.0
+**@Description :  Load the Custom record and check the unprocessed Payment,create Payment
+**@Updates     :  v1.0 - Initial version.</code></pre></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-maintainability" class="tab-panel">
+      <div class="rings-row">
+        <div class="ring-block">
+          <div class="ring-label">Before</div>
+          <div class="ring-svg">
+            <svg width="130" height="130" viewBox="0 0 130 130">
+              <circle class="ring-bg" cx="65" cy="65" r="54"/>
+              <circle class="ring-progress" cx="65" cy="65" r="54" stroke="#f97316" stroke-dasharray="339" stroke-dashoffset="203" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-val"><div class="num lvl-2">2</div><div class="sub">/ 5</div></div>
+          </div>
+          <div class="ring-name lvl-2">Weak</div>
+        </div>
+        <div class="rings-summary">
+          <h3>Maintainability: Weak</h3>
+          <p>No fixes were applied — this is an assessment. Since this dimension has no "after" state, only the before score is shown.</p>
+        </div>
+      </div>
+      <div class="findings-section">
+        <h3>0 Must Fix &middot; 1 Should Fix &middot; 0 Consider</h3>
+        
+        <div class="finding-card sev-should">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-006</span>
+            <span class="badge badge-should">Should Fix &middot; Open</span>
+            <h4>The same ~15 helper functions are copy-pasted across up to six separate large scripts</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>Functions like searchExistingStudents, createError, and accountSearch are defined independently, with identical or near-identical bodies, in as many as six different 1,000-2,000 line scripts instead of living in one shared module. A fix made in one copy — as already happened with the duplicate-invoice guard — has no way to reach the others.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Extract the shared search and error-catcher helpers into one library module every integration script imports.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Sandbox/MapReduce/Softype_MR_Journal_integration.js</div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-functionality" class="tab-panel">
+      <div class="rings-row">
+        <div class="ring-block">
+          <div class="ring-label">Before</div>
+          <div class="ring-svg">
+            <svg width="130" height="130" viewBox="0 0 130 130">
+              <circle class="ring-bg" cx="65" cy="65" r="54"/>
+              <circle class="ring-progress" cx="65" cy="65" r="54" stroke="#f97316" stroke-dasharray="339" stroke-dashoffset="203" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-val"><div class="num lvl-2">2</div><div class="sub">/ 5</div></div>
+          </div>
+          <div class="ring-name lvl-2">Weak</div>
+        </div>
+        <div class="rings-summary">
+          <h3>Functionality: Weak</h3>
+          <p>No fixes were applied — this is an assessment. Since this dimension has no "after" state, only the before score is shown.</p>
+        </div>
+      </div>
+      <div class="findings-section">
+        <h3>2 Must Fix &middot; 0 Should Fix &middot; 0 Consider</h3>
+        
+        <div class="finding-card sev-must">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-001</span>
+            <span class="badge badge-must">Must Fix &middot; Open</span>
+            <h4>Production&#x27;s duplicate-invoice guard detects the duplicate, logs it, and lets the invoice save anyway</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>This script&#x27;s entire job is to stop a second invoice being created against an enrollment reference that already has one. It correctly finds the duplicate and writes a record of it, but then never actually stops the save — the line that should block it is missing. The Sandbox copy of the same file already has the fix.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Add the missing throw that blocks the save, matching the Sandbox copy.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Production/UserEvent/Softype_TIP_UE_ValidateDupeInv.js &middot; lines 58, 87, 90</div>
+            <div class="code-compare"><div class="code-panel code-panel-before"><div class="code-panel-label">⚠ Current</div><pre><code class="language-javascript">        // Throw error to prevent invoice creation
+    }
+
+    log.debug(&#x27;Validation Passed&#x27;, &#x27;No duplicate invoice found. Invoice creation allowed.&#x27;);</code></pre></div><div class="code-panel code-panel-after"><div class="code-panel-label">✓ Recommended</div><pre><code class="language-javascript">        // Throw error to prevent invoice creation
+        throw error.create({
+            name: &#x27;DUPLICATE_INVOICE&#x27;,
+            message: errorMsg
+        });
+    }
+
+    log.debug(&#x27;Validation Passed&#x27;, &#x27;No duplicate invoice found. Invoice creation allowed.&#x27;);</code></pre></div></div>
+          </div>
+        </div>
+
+        <div class="finding-card sev-must">
+          <div class="finding-head">
+            <span class="badge badge-dim">M-002</span>
+            <span class="badge badge-must">Must Fix &middot; Open</span>
+            <h4>Money amounts are de-commafied with a single-replace, silently corrupting any amount with two or more thousands separators</h4>
+          </div>
+          <div class="finding-body">
+            <div class="finding-plain">
+              <div class="prob-label">⚠ What's wrong</div>
+              <p>Every money value read from an incoming payload has its commas stripped with .replace(&quot;,&quot;, &quot;&quot;), which only removes the FIRST comma in JavaScript. An amount like 1,234,567.89 becomes 1,234567.89, which fails to parse as a number. This exact pattern repeats about 40 times across all six integration scripts, and the correct all-commas version never appears anywhere in the repo.</p>
+              <div class="fix-label">→ Recommended fix</div>
+              <p>Replace every single-comma .replace(&quot;,&quot;, &quot;&quot;) on a money string with a global replace, .replace(/,/g, &#x27;&#x27;), or route all money parsing through one shared helper that does this correctly once.</p>
+            </div>
+            <div class="code-plain" style="padding:0 0 8px;color:var(--text-muted);font-size:0.8rem;">Sandbox/MapReduce/Softype_MR_Journal_integration.js &middot; lines 142, 144</div>
+            <div class="code-compare"><div class="code-panel code-panel-before"><div class="code-panel-label">⚠ Current</div><pre><code class="language-javascript">if (paytype[0].hasOwnProperty(&#x27;amount_paid&#x27;)) {
+    amountpaid = paytype[0].amount_paid;
+    amountpaid = amountpaid.replace(&quot;,&quot;, &quot;&quot;);
+}</code></pre></div><div class="code-panel code-panel-after"><div class="code-panel-label">✓ Recommended</div><pre><code class="language-javascript">if (paytype[0].hasOwnProperty(&#x27;amount_paid&#x27;)) {
+    amountpaid = paytype[0].amount_paid;
+    amountpaid = amountpaid.replace(/,/g, &#x27;&#x27;);
+}</code></pre></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="tab-actions" class="tab-panel">
+      <h2>Required Actions — 7 Open</h2>
+      <p>TIP's SuiteScript layer has 7 open findings across 3 Must Fix, 3 Should Fix, and 1 Consider. Nothing has been applied yet.</p>
+      <div class="finding-card" style="margin-top: var(--st-space-8)">
+        
+        <div class="fix-row">
+          <div class="fix-id">M-001</div>
+          <span class="badge badge-must">Must</span>
+          <span class="badge badge-dim">Functionality</span>
+          <div class="fix-headline">Production&#x27;s duplicate-invoice guard detects the duplicate, logs it, and lets the invoice save anyway</div>
+          <div class="fix-file">Production/UserEvent/Softype_TIP_UE_ValidateDupeInv.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+        <div class="fix-row">
+          <div class="fix-id">M-002</div>
+          <span class="badge badge-must">Must</span>
+          <span class="badge badge-dim">Functionality</span>
+          <div class="fix-headline">Money amounts are de-commafied with a single-replace, silently corrupting any amount with two or more thousands separators</div>
+          <div class="fix-file">Sandbox/MapReduce/Softype_MR_Journal_integration.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+        <div class="fix-row">
+          <div class="fix-id">M-003</div>
+          <span class="badge badge-must">Must</span>
+          <span class="badge badge-dim">Documentation</span>
+          <div class="fix-headline">No script in the repository records what it&#x27;s deployed on</div>
+          <div class="fix-file">Production/UserEvent/Softype_TIP_UE_ValidateDupeInv.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+        <div class="fix-row">
+          <div class="fix-id">M-004</div>
+          <span class="badge badge-should">Should</span>
+          <span class="badge badge-dim">Documentation</span>
+          <div class="fix-headline">5 of 11 files have no update history</div>
+          <div class="fix-file">Sandbox/MapReduce/Softype_MR_Journal_integration.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+        <div class="fix-row">
+          <div class="fix-id">M-005</div>
+          <span class="badge badge-should">Should</span>
+          <span class="badge badge-dim">Governance</span>
+          <div class="fix-headline">The RESTlet hardcodes a File Cabinet folder id and saves a custom record with none of its own fields populated</div>
+          <div class="fix-file">Sandbox/Restlet/softype_rl_creditmemo_integration.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+        <div class="fix-row">
+          <div class="fix-id">M-006</div>
+          <span class="badge badge-should">Should</span>
+          <span class="badge badge-dim">Maintainability</span>
+          <div class="fix-headline">The same ~15 helper functions are copy-pasted across up to six separate large scripts</div>
+          <div class="fix-file">Sandbox/MapReduce/Softype_MR_Journal_integration.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+        <div class="fix-row">
+          <div class="fix-id">M-007</div>
+          <span class="badge badge-consider">Consider</span>
+          <span class="badge badge-dim">Governance</span>
+          <div class="fix-headline">getInputData materializes the full unprocessed-record list as an array rather than returning the search</div>
+          <div class="fix-file">Sandbox/MapReduce/Softype_MR_Journal_integration.js</div>
+          <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--text-2);">Open</span>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+  <footer class="footer">
+    <p>Mason 2.0.0 Code Health Review &middot; Softype, Inc. &middot; Confidential</p>
+    <p>info@softype.com &middot; www.softype.com</p>
+  </footer>
+  <script>
+    function showTab(id, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      btn.classList.add('active');
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+    document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());
+  </script>
+</body>
+</html>
